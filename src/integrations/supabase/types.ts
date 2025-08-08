@@ -14,7 +14,234 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      avatar_library: {
+        Row: {
+          bio: string | null
+          id: string
+          image_url: string | null
+          name: string
+        }
+        Insert: {
+          bio?: string | null
+          id: string
+          image_url?: string | null
+          name: string
+        }
+        Update: {
+          bio?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
+      chat_history: {
+        Row: {
+          ai_response: string | null
+          avatar_id: string
+          id: string
+          timestamp: string
+          user_id: string
+          user_message: string
+        }
+        Insert: {
+          ai_response?: string | null
+          avatar_id: string
+          id?: string
+          timestamp?: string
+          user_id: string
+          user_message: string
+        }
+        Update: {
+          ai_response?: string | null
+          avatar_id?: string
+          id?: string
+          timestamp?: string
+          user_id?: string
+          user_message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_history_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatar_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          date: string
+          id: string
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          date?: string
+          id?: string
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          date?: string
+          id?: string
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fin_score: {
+        Row: {
+          badges: Json
+          id: string
+          last_updated: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          badges?: Json
+          id?: string
+          last_updated?: string
+          score: number
+          user_id: string
+        }
+        Update: {
+          badges?: Json
+          id?: string
+          last_updated?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fin_score_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      savings_goals: {
+        Row: {
+          created_at: string
+          current_amount: number
+          deadline: string | null
+          id: string
+          target_amount: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_amount?: number
+          deadline?: string | null
+          id?: string
+          target_amount: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_amount?: number
+          deadline?: string | null
+          id?: string
+          target_amount?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_goals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settings: {
+        Row: {
+          notifications: boolean
+          preferred_avatar: string | null
+          theme: string | null
+          user_id: string
+        }
+        Insert: {
+          notifications?: boolean
+          preferred_avatar?: string | null
+          theme?: string | null
+          user_id: string
+        }
+        Update: {
+          notifications?: boolean
+          preferred_avatar?: string | null
+          theme?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settings_preferred_avatar_fkey"
+            columns: ["preferred_avatar"]
+            isOneToOne: false
+            referencedRelation: "avatar_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          avatar_style: string | null
+          created_at: string
+          display_name: string | null
+          email: string
+          id: string
+        }
+        Insert: {
+          avatar_style?: string | null
+          created_at?: string
+          display_name?: string | null
+          email: string
+          id?: string
+        }
+        Update: {
+          avatar_style?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
