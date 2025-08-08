@@ -18,6 +18,14 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				inter: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+				grotesk: ["Space Grotesk", "ui-sans-serif", "system-ui", "sans-serif"]
+			},
+			boxShadow: {
+				glow: "0 0 0 1px hsl(var(--primary) / 0.4), 0 10px 40px -10px hsl(var(--primary) / 0.5)",
+				soft: "0 6px 24px -12px hsl(var(--foreground) / 0.12)"
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
