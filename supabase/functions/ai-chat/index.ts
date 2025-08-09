@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 
 const PERSONAS: Record<string, string> = {
   buffett:
@@ -23,9 +23,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (!OPENAI_API_KEY) {
+  if (!GEMINI_API_KEY) {
     return new Response(
-      JSON.stringify({ error: "Missing OPENAI_API_KEY secret" }),
+      JSON.stringify({ error: "Missing GEMINI_API_KEY secret" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
@@ -44,43 +44,65 @@ serve(async (req) => {
       PERSONAS[String(avatar_id)] ||
       "You are a seasoned financial mentor avatar. Be pragmatic and helpful. Offer clear steps, and never provide legal or tax advice.";
 
-    const msgs = [
-      {
-        role: "system",
-        content:
-          system +
-          " Stay in character as an educational avatar. Provide practical, responsible suggestions. If the user asks for regulated advice, provide general education and encourage consulting a professional.",
-      },
-      ...(Array.isArray(history)
-        ? history.map((m: any) => ({ role: m.role, content: m.content }))
-        : []),
-      { role: "user", content: String(message) },
-    ];
+    // Convert messages to Gemini format
+    const contents = [];
+    
+    // Add system instruction as first user message if no history exists
+    if (!Array.isArray(history) || history.length === 0) {
+      contents.push({
+        role: "user",
+        parts: [{ text: system + " Stay in character as an educational avatar. Provide practical, responsible suggestions. If the user asks for regulated advice, provide general education and encourage consulting a professional." }]
+      });
+      contents.push({
+        role: "model",
+        parts: [{ text: "I understand. I'll stay in character and provide helpful educational guidance." }]
+      });
+    }
 
-    const oaRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    // Add history
+    if (Array.isArray(history)) {
+      for (const m of history) {
+        contents.push({
+          role: m.role === "user" ? "user" : "model",
+          parts: [{ text: m.content }]
+        });
+      }
+    }
+
+    // Add current message
+    contents.push({
+      role: "user",
+      parts: [{ text: String(message) }]
+    });
+
+    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: msgs,
-        temperature: 0.7,
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2048,
+        },
+        systemInstruction: {
+          parts: [{ text: system + " Stay in character as an educational avatar. Provide practical, responsible suggestions. If the user asks for regulated advice, provide general education and encourage consulting a professional." }]
+        }
       }),
     });
 
-    if (!oaRes.ok) {
-      const errText = await oaRes.text();
-      console.error("OpenAI error:", errText);
+    if (!geminiRes.ok) {
+      const errText = await geminiRes.text();
+      console.error("Gemini error:", errText);
       return new Response(
-        JSON.stringify({ error: "OpenAI API error", details: errText }),
+        JSON.stringify({ error: "Gemini API error", details: errText }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const data = await oaRes.json();
-    const reply = data?.choices?.[0]?.message?.content ?? "";
+    const data = await geminiRes.json();
+    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
