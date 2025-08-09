@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bookmark, Mic, Play, Send, Sparkles } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { listChatHistory, addChatMessage } from "@/integrations/supabase/db";
 
 const AVATARS = [
   { id: "buffett", name: "Warren", color: "bg-purple-500/20" },
@@ -19,7 +22,70 @@ const initial: Msg[] = [
 
 const Chat = () => {
   const [active, setActive] = useState("naval");
-  const [messages] = useState<Msg[]>(initial);
+  const [messages, setMessages] = useState<Msg[]>(initial);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await listChatHistory({ avatarId: active, limit: 10 });
+        const msgs: Msg[] = [];
+        rows.reverse().forEach((r: any, idx: number) => {
+          msgs.push({ id: Date.now() + idx * 2, role: "user", text: r.user_message });
+          if (r.ai_response) {
+            msgs.push({ id: Date.now() + idx * 2 + 1, role: "ai", text: r.ai_response });
+          }
+        });
+        if (!cancelled) setMessages(msgs.length ? msgs : initial);
+      } catch (e) {
+        console.warn("History load skipped:", e);
+        if (!cancelled) setMessages(initial);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [active]);
+
+  const handleSend = async () => {
+    if (!input.trim() || sending) return;
+    const text = input.trim();
+    const userMsg: Msg = { id: Date.now(), role: "user", text };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setSending(true);
+    try {
+      const history = [...messages, userMsg].slice(-8).map((m) => ({
+        role: m.role === "user" ? "user" : "assistant",
+        content: m.text,
+      }));
+      const { data, error } = await supabase.functions.invoke("ai-chat", {
+        body: { avatar_id: active, message: text, history },
+      });
+      if (error) throw error;
+      const replyText = data?.reply || "";
+      const aiMsg: Msg = { id: Date.now() + 1, role: "ai", text: replyText };
+      setMessages((prev) => [...prev, aiMsg]);
+
+      try {
+        await addChatMessage({ avatar_id: active, user_message: text, ai_response: replyText });
+      } catch (e) {
+        console.warn("Chat save skipped:", e);
+      }
+    } catch (e: any) {
+      console.error("Chat error:", e);
+      toast({
+        title: "Chat error",
+        description: e?.message ?? "Unable to get a reply. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <main className="container py-8">
@@ -63,17 +129,31 @@ const Chat = () => {
           ))}
 
           {/* Typing indicator */}
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Sparkles className="h-4 w-4" />
-            <div className="typing-dots"><span></span><span></span><span></span></div>
-          </div>
+          {sending && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Sparkles className="h-4 w-4" />
+              <div className="typing-dots"><span></span><span></span><span></span></div>
+            </div>
+          )}
         </div>
 
         {/* Input */}
         <div className="mt-4 flex items-center gap-2">
-          <Button variant="glass" size="icon" aria-label="Speech to text"><Mic /></Button>
-          <Input placeholder="Ask about budgets, investing, or goals..." className="rounded-2xl" />
-          <Button variant="hero" aria-label="Send"><Send /></Button>
+          <Button variant="glass" size="icon" aria-label="Speech to text" disabled={sending}>
+            <Mic />
+          </Button>
+          <Input
+            placeholder="Ask about budgets, investing, or goals..."
+            className="rounded-2xl"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSend();
+            }}
+          />
+          <Button variant="hero" aria-label="Send" onClick={handleSend} disabled={sending || !input.trim()}>
+            <Send />
+          </Button>
         </div>
       </Card>
 
