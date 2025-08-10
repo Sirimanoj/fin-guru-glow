@@ -300,21 +300,25 @@ export async function upsertSettings(input: SettingsInput) {
 }
 
 // -------- Monthly Budgets --------
+// NOTE: The generated Supabase types currently don't include "monthly_budgets".
+// To avoid type errors, we cast the client to any for these specific calls.
 export async function getMonthlyBudget(month: string) {
   const userId = await getUserId();
-  const { data, error } = await supabase
+  const client = supabase as any;
+  const { data, error } = await client
     .from("monthly_budgets")
     .select("*")
     .eq("user_id", userId)
     .eq("month", month)
     .maybeSingle();
   if (error) throw error;
-  return data as MonthlyBudgetRow | null;
+  return (data as MonthlyBudgetRow) ?? null;
 }
 
 export async function upsertMonthlyBudget(input: MonthlyBudgetInput) {
   const userId = await getUserId();
-  const { data, error } = await supabase
+  const client = supabase as any;
+  const { data, error } = await client
     .from("monthly_budgets")
     .upsert(
       {
@@ -332,3 +336,4 @@ export async function upsertMonthlyBudget(input: MonthlyBudgetInput) {
   if (error) throw error;
   return data as MonthlyBudgetRow;
 }
+
