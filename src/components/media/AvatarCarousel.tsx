@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Sparkles, CheckCircle2 } from "lucide-react";
 
@@ -7,21 +8,21 @@ const avatars = [
     name: "Warren",
     title: "Value Visionary",
     gradient: "from-purple-500/40 to-blue-500/40",
-    tip: "Invest in what you understand. Compounding is your superpower.",
+    tip: "Price is what you pay, value is what you get. Let compounding do the heavy lifting.",
   },
   {
     id: "naval",
     name: "Naval",
     title: "Leverage Guru",
     gradient: "from-teal-500/40 to-cyan-500/40",
-    tip: "Seek specific knowledge, build, then automate and compound.",
+    tip: "Earn with leverage: code, media, capital. Productize yourself and compound freedom.",
   },
   {
     id: "dalio",
     name: "Ray",
     title: "Risk Architect",
     gradient: "from-indigo-500/40 to-fuchsia-500/40",
-    tip: "Diversify well. Balance risk with radical transparency.",
+    tip: "Diversify to survive, balance to thrive. Build an all-weather approach to risk.",
   },
 ];
 

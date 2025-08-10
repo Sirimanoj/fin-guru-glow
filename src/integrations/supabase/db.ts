@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Helper to get the current user's id (required for RLS)
@@ -46,6 +47,27 @@ export interface SettingsInput {
   theme?: string | null;
   notifications?: boolean;
   preferred_avatar?: string | null;
+}
+
+// New types for Monthly Budgets
+export interface MonthlyExpenseItem {
+  label: string;
+  amount: number;
+}
+
+export interface MonthlyBudgetInput {
+  month: string; // 'YYYY-MM'
+  income: number;
+  savings_goal: number;
+  fixed_expenses: MonthlyExpenseItem[];
+  variable_expenses: MonthlyExpenseItem[];
+}
+
+export interface MonthlyBudgetRow extends MonthlyBudgetInput {
+  id: UUID;
+  user_id: UUID;
+  created_at: string;
+  updated_at: string;
 }
 
 // -------- Users (profiles) --------
@@ -275,4 +297,38 @@ export async function upsertSettings(input: SettingsInput) {
     .maybeSingle();
   if (error) throw error;
   return data;
+}
+
+// -------- Monthly Budgets --------
+export async function getMonthlyBudget(month: string) {
+  const userId = await getUserId();
+  const { data, error } = await supabase
+    .from("monthly_budgets")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("month", month)
+    .maybeSingle();
+  if (error) throw error;
+  return data as MonthlyBudgetRow | null;
+}
+
+export async function upsertMonthlyBudget(input: MonthlyBudgetInput) {
+  const userId = await getUserId();
+  const { data, error } = await supabase
+    .from("monthly_budgets")
+    .upsert(
+      {
+        user_id: userId,
+        month: input.month,
+        income: input.income,
+        savings_goal: input.savings_goal,
+        fixed_expenses: (input.fixed_expenses ?? []) as any,
+        variable_expenses: (input.variable_expenses ?? []) as any,
+      },
+      { onConflict: "user_id,month" }
+    )
+    .select()
+    .maybeSingle();
+  if (error) throw error;
+  return data as MonthlyBudgetRow;
 }
