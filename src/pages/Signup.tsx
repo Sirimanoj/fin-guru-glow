@@ -16,17 +16,32 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSignup = async () => {
+const handleSignup = async () => {
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin },
+    });
     if (error) {
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
       setLoading(false);
       return;
     }
 
+    // If email confirmation is required, session will be null
+    if (!data.session) {
+      toast({
+        title: "Confirm your email",
+        description: "We've sent you a confirmation link. Verify to complete signup.",
+      });
+      setLoading(false);
+      navigate("/login");
+      return;
+    }
+
     try {
-      // Upsert profile and default settings
+      // Upsert profile and default settings only when session exists
       await upsertUserProfile({ email, display_name: name });
       await upsertSettings({ notifications: true });
       toast({

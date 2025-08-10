@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bookmark, Mic, Play, Send, Sparkles } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSpeechToText } from "@/hooks/useSpeechToText";
 import { listChatHistory, addChatMessage } from "@/integrations/supabase/db";
 
 const AVATARS = [
@@ -14,8 +15,22 @@ const AVATARS = [
   { id: "dalio", name: "Ray", color: "bg-indigo-500/20" },
 ];
 
-type Msg = { id: number; role: "user" | "ai"; text: string };
+const AVATAR_QUOTES: Record<string, { text: string; author: string }> = {
+  buffett: {
+    text: "Price is what you pay; value is what you get. Compound relentlessly.",
+    author: "Warren Buffett",
+  },
+  naval: {
+    text: "Specific knowledge is found by pursuing your genuine curiosity and passion.",
+    author: "Naval Ravikant",
+  },
+  dalio: {
+    text: "Pain + reflection = progress. Build principles that compound your outcomes.",
+    author: "Ray Dalio",
+  },
+};
 
+type Msg = { id: number; role: "user" | "ai"; text: string };
 const initial: Msg[] = [
   { id: 1, role: "ai", text: "Hey Money Maestro! What goal are we optimizing for this month?" },
 ];
@@ -26,6 +41,29 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
+
+  const { isRecording, transcript, error: sttError, startRecording, stopRecording, reset } = useSpeechToText();
+
+  useEffect(() => {
+    document.title = "AI Chat — Finance Personas | Gen Z Money Coach";
+    const meta = document.querySelector('meta[name="description"]');
+    const content = "Chat with Warren, Naval, or Ray—AI personas for budgets, investing, and goals.";
+    if (meta) meta.setAttribute("content", content);
+  }, []);
+
+  useEffect(() => {
+    if (sttError) {
+      toast({ title: "Mic error", description: sttError, variant: "destructive" });
+    }
+  }, [sttError]);
+
+  useEffect(() => {
+    if (transcript && !isRecording) {
+      setInput(transcript);
+      handleSend(transcript);
+      reset();
+    }
+  }, [transcript, isRecording]);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,9 +88,10 @@ const Chat = () => {
     };
   }, [active]);
 
-  const handleSend = async () => {
-    if (!input.trim() || sending) return;
-    const text = input.trim();
+const handleSend = async (forcedText?: string) => {
+    if (sending) return;
+    const text = (forcedText ?? input).trim();
+    if (!text) return;
     const userMsg: Msg = { id: Date.now(), role: "user", text };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
@@ -111,7 +150,7 @@ const Chat = () => {
       </div>
 
       {/* Chat window */}
-      <Card className="card-neo p-4 md:p-6 mt-4">
+      <Card key={active} className="card-neo p-4 md:p-6 mt-4 animate-enter">
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
           {messages.map((m) => (
             <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -139,9 +178,17 @@ const Chat = () => {
 
         {/* Input */}
         <div className="mt-4 flex items-center gap-2">
-          <Button variant="glass" size="icon" aria-label="Speech to text" disabled={sending}>
+          <Button
+            variant={isRecording ? "hero" : "glass"}
+            size="icon"
+            aria-label={isRecording ? "Stop recording" : "Start recording"}
+            onClick={() => (isRecording ? stopRecording() : startRecording())}
+            disabled={sending}
+            className={isRecording ? "pulse" : ""}
+          >
             <Mic />
           </Button>
+          {isRecording && <span className="text-xs text-accent ml-1">Listening…</span>}
           <Input
             placeholder="Ask about budgets, investing, or goals..."
             className="rounded-2xl"
@@ -151,7 +198,7 @@ const Chat = () => {
               if (e.key === "Enter") handleSend();
             }}
           />
-          <Button variant="hero" aria-label="Send" onClick={handleSend} disabled={sending || !input.trim()}>
+          <Button variant="hero" aria-label="Send" onClick={() => handleSend()} disabled={sending || !input.trim()}>
             <Send />
           </Button>
         </div>
@@ -160,7 +207,7 @@ const Chat = () => {
       {/* Quote highlight */}
       <Card className="card-neo p-4 mt-4">
         <p className="text-sm text-muted-foreground">
-          “Specific knowledge is found by pursuing your genuine curiosity and passion.” — Naval
+          {`“${AVATAR_QUOTES[active].text}” — ${AVATAR_QUOTES[active].author}`}
         </p>
       </Card>
     </main>
