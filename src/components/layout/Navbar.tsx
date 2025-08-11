@@ -1,7 +1,10 @@
 import { Link, NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getMyProfile } from "@/integrations/supabase/db";
 export const Navbar = () => {
   const isMobile = useIsMobile();
   const linkCls = ({ isActive }: { isActive: boolean }) =>

@@ -16,6 +16,7 @@ export interface UserProfile {
   email: string;
   display_name?: string | null;
   avatar_style?: string | null;
+  avatar_url?: string | null;
 }
 
 export interface ChatMessageInput {
@@ -47,6 +48,8 @@ export interface SettingsInput {
   theme?: string | null;
   notifications?: boolean;
   preferred_avatar?: string | null;
+  currency?: string | null;
+  monthly_budget_goal?: number | null;
 }
 
 // New types for Monthly Budgets
@@ -78,6 +81,7 @@ export async function upsertUserProfile(profile: UserProfile) {
     email: profile.email,
     display_name: profile.display_name ?? null,
     avatar_style: profile.avatar_style ?? null,
+    avatar_url: profile.avatar_url ?? null,
   };
   const { data, error } = await supabase
     .from("users")
@@ -292,6 +296,8 @@ export async function upsertSettings(input: SettingsInput) {
       theme: input.theme ?? null,
       notifications: input.notifications ?? true,
       preferred_avatar: input.preferred_avatar ?? null,
+      currency: input.currency ?? undefined,
+      monthly_budget_goal: input.monthly_budget_goal ?? undefined,
     })
     .select()
     .maybeSingle();

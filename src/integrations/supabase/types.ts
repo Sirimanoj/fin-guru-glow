@@ -184,18 +184,24 @@ export type Database = {
       }
       settings: {
         Row: {
+          currency: string | null
+          monthly_budget_goal: number | null
           notifications: boolean
           preferred_avatar: string | null
           theme: string | null
           user_id: string
         }
         Insert: {
+          currency?: string | null
+          monthly_budget_goal?: number | null
           notifications?: boolean
           preferred_avatar?: string | null
           theme?: string | null
           user_id: string
         }
         Update: {
+          currency?: string | null
+          monthly_budget_goal?: number | null
           notifications?: boolean
           preferred_avatar?: string | null
           theme?: string | null
@@ -221,6 +227,7 @@ export type Database = {
       users: {
         Row: {
           avatar_style: string | null
+          avatar_url: string | null
           created_at: string
           display_name: string | null
           email: string
@@ -228,6 +235,7 @@ export type Database = {
         }
         Insert: {
           avatar_style?: string | null
+          avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           email: string
@@ -235,6 +243,7 @@ export type Database = {
         }
         Update: {
           avatar_style?: string | null
+          avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           email?: string
