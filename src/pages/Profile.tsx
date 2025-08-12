@@ -6,14 +6,22 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Camera, Edit3, MessageSquare, Receipt, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getMyProfile, upsertUserProfile, listChatHistory, listExpenses, listGoals } from "@/integrations/supabase/db";
 const Profile = () => {
   const { toast } = useToast();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [fullName, setFullName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [bio, setBio] = useState<string>("");
+  const [prefTheme, setPrefTheme] = useState<string>("minimal");
+  const [finStyle, setFinStyle] = useState<string>("balanced");
   const [uploading, setUploading] = useState(false);
   const [chatCount, setChatCount] = useState(0);
   const [expenseCount, setExpenseCount] = useState(0);
@@ -28,6 +36,9 @@ useEffect(() => {
         const p = await getMyProfile();
         setFullName(p?.display_name ?? "");
         setAvatarUrl(p?.avatar_url ?? null);
+        setPhone(p?.phone ?? "");
+        setBio(p?.bio ?? "");
+        setPrefTheme((p?.avatar_style as string) ?? "minimal");
       } catch { /* ignore */ }
       try {
         const [gh, ex, go] = await Promise.all([
@@ -64,13 +75,17 @@ useEffect(() => {
   const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast({ title: "Not signed in", description: "Please log in to upload your photo.", variant: "destructive" });
       return;
     }
+
+    // Instant local preview
+    const objectUrl = URL.createObjectURL(file);
+    setLocalPreview(objectUrl);
+    setAvatarUrl(objectUrl);
+
     const ext = file.name.split(".").pop() || "png";
     const path = `${user.id}/avatar.${ext}`;
     setUploading(true);
@@ -86,17 +101,34 @@ useEffect(() => {
     const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
     const publicUrl = pub.publicUrl;
     setAvatarUrl(publicUrl);
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
     try {
-      await upsertUserProfile({ email, display_name: fullName, avatar_url: publicUrl });
+      await upsertUserProfile({ email, display_name: fullName, avatar_url: publicUrl, phone, bio, avatar_style: prefTheme });
       toast({ title: "Photo updated", description: "Your profile picture was saved." });
     } catch (err: any) {
-      toast({ title: "Save error", description: err.message || "Could not save photo." , variant: "destructive"});
+      toast({ title: "Save error", description: err.message || "Could not save photo.", variant: "destructive" });
     } finally {
       setUploading(false);
     }
   };
 
-  const triggerUpload = () => document.getElementById("avatar")?.click();
+  const triggerUpload = () => document.getElementById("avatar-file")?.click();
+
+  const saveProfile = async () => {
+    try {
+      await upsertUserProfile({
+        email,
+        display_name: fullName,
+        avatar_url: avatarUrl,
+        phone,
+        bio,
+        avatar_style: prefTheme,
+      });
+      toast({ title: "Profile saved", description: "Your changes were saved." });
+    } catch (e: any) {
+      toast({ title: "Save failed", description: e?.message ?? "Please try again.", variant: "destructive" });
+    }
+  };
   return (
     <main className="container py-8">
       <h1 className="font-grotesk text-2xl mb-6">Your Profile</h1>
@@ -132,28 +164,48 @@ useEffect(() => {
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="card-neo p-5">
-          <h3 className="font-medium">Avatar</h3>
-          <div className="mt-4 flex items-center gap-4">
-            <div className="w-28">
-              <AspectRatio ratio={3/4}>
-                {avatarUrl ? (
+          <h3 className="font-medium">Profile Photo & Upload</h3>
+          <div
+            className="mt-4 grid gap-4 md:grid-cols-2"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const file = e.dataTransfer.files?.[0];
+              if (file) {
+                const fakeEvent = { target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>;
+                onUpload(fakeEvent);
+              }
+            }}
+          >
+            <div className="w-full">
+              <AspectRatio ratio={1}>
+                {(localPreview || avatarUrl) ? (
                   <img
-                    src={avatarUrl}
-                    alt="Passport size profile photo"
-                    className="h-full w-full object-cover rounded-md border border-border"
+                    src={(localPreview || avatarUrl) as string}
+                    alt="Profile preview"
+                    className="h-full w-full object-cover rounded-xl border border-border shadow-sm"
                     loading="lazy"
                   />
                 ) : (
-                  <div className="h-full w-full rounded-md border border-dashed border-border/70 bg-muted/20 flex items-center justify-center text-xs text-muted-foreground">
-                    No photo
+                  <div className="h-full w-full rounded-xl border border-dashed border-border/70 bg-muted/20 flex flex-col items-center justify-center text-sm text-muted-foreground">
+                    <Camera className="h-6 w-6 mb-2" />
+                    Drag & drop your photo here
+                    <span className="text-xs mt-1">or click to browse</span>
                   </div>
                 )}
               </AspectRatio>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="avatar">Upload</Label>
-              <Input id="avatar" type="file" accept="image/*" className="rounded-2xl" onChange={onUpload} disabled={uploading} />
-              <p className="text-xs text-muted-foreground">Use a clear 3:4 portrait photo.</p>
+            <div className="flex flex-col justify-between">
+              <div className="space-y-2">
+                <Label htmlFor="avatar-file">Upload</Label>
+                <Input id="avatar-file" type="file" accept="image/*" className="rounded-2xl" onChange={onUpload} disabled={uploading} />
+                <p className="text-xs text-muted-foreground">Recommended: square image. Large images are auto-resized.</p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="glass" className="rounded-2xl" onClick={triggerUpload} disabled={uploading}>
+                  {uploading ? "Uploading…" : "Choose Photo"}
+                </Button>
+              </div>
             </div>
           </div>
         </Card>

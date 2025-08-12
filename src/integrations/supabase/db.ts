@@ -17,6 +17,8 @@ export interface UserProfile {
   display_name?: string | null;
   avatar_style?: string | null;
   avatar_url?: string | null;
+  phone?: string | null;
+  bio?: string | null;
 }
 
 export interface ChatMessageInput {
@@ -82,6 +84,8 @@ export async function upsertUserProfile(profile: UserProfile) {
     display_name: profile.display_name ?? null,
     avatar_style: profile.avatar_style ?? null,
     avatar_url: profile.avatar_url ?? null,
+    phone: profile.phone ?? null,
+    bio: profile.bio ?? null,
   };
   const { data, error } = await supabase
     .from("users")

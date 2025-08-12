@@ -7,8 +7,46 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getMyProfile } from "@/integrations/supabase/db";
 export const Navbar = () => {
   const isMobile = useIsMobile();
+  const [authed, setAuthed] = useState(false);
+  const [profileName, setProfileName] = useState<string>("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const linkCls = ({ isActive }: { isActive: boolean }) =>
     `px-3 py-2 rounded-xl ${isActive ? "bg-accent/20 text-accent" : "hover:bg-accent/10"}`;
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const loggedIn = !!session?.user;
+      setAuthed(loggedIn);
+      if (loggedIn) {
+        setTimeout(async () => {
+          try {
+            const p = await getMyProfile();
+            setProfileName(p?.display_name || session!.user!.email || "");
+            setAvatarUrl(p?.avatar_url || null);
+          } catch {}
+        }, 0);
+      } else {
+        setProfileName("");
+        setAvatarUrl(null);
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const loggedIn = !!session?.user;
+      setAuthed(loggedIn);
+      if (loggedIn) {
+        setTimeout(async () => {
+          try {
+            const p = await getMyProfile();
+            setProfileName(p?.display_name || session!.user!.email || "");
+            setAvatarUrl(p?.avatar_url || null);
+          } catch {}
+        }, 0);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 backdrop-blur-xl border-b border-border/60 bg-background/70">
@@ -39,12 +77,24 @@ export const Navbar = () => {
         )}
 
         <div className="flex items-center gap-2">
-          <Button asChild variant="glass" size={isMobile ? "sm" : "default"}>
-            <Link to="/login">Log in</Link>
-          </Button>
-          <Button asChild variant="hero" size={isMobile ? "sm" : "lg"}>
-            <Link to="/chat">Start Chatting</Link>
-          </Button>
+          {authed ? (
+            <Link to="/profile" className="flex items-center gap-2 hover-scale">
+              <Avatar className="h-8 w-8 border border-border">
+                <AvatarImage src={avatarUrl ?? undefined} alt="User avatar" />
+                <AvatarFallback>{(profileName || "U").charAt(0)}</AvatarFallback>
+              </Avatar>
+              {!isMobile && <span className="text-sm font-medium">{profileName || "Profile"}</span>}
+            </Link>
+          ) : (
+            <>
+              <Button asChild variant="glass" size={isMobile ? "sm" : "default"}>
+                <Link to="/login">Log in</Link>
+              </Button>
+              <Button asChild variant="hero" size={isMobile ? "sm" : "lg"}>
+                <Link to="/chat">Start Chatting</Link>
+              </Button>
+            </>
+          )}
         </div>
       </nav>
     </header>
