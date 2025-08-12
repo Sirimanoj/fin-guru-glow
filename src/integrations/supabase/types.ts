@@ -144,6 +144,42 @@ export type Database = {
           },
         ]
       }
+      monthly_budgets: {
+        Row: {
+          created_at: string
+          fixed_expenses: Json
+          id: string
+          income: number
+          month: string
+          savings_goal: number
+          updated_at: string
+          user_id: string
+          variable_expenses: Json
+        }
+        Insert: {
+          created_at?: string
+          fixed_expenses?: Json
+          id?: string
+          income?: number
+          month: string
+          savings_goal?: number
+          updated_at?: string
+          user_id: string
+          variable_expenses?: Json
+        }
+        Update: {
+          created_at?: string
+          fixed_expenses?: Json
+          id?: string
+          income?: number
+          month?: string
+          savings_goal?: number
+          updated_at?: string
+          user_id?: string
+          variable_expenses?: Json
+        }
+        Relationships: []
+      }
       savings_goals: {
         Row: {
           created_at: string
@@ -228,26 +264,32 @@ export type Database = {
         Row: {
           avatar_style: string | null
           avatar_url: string | null
+          bio: string | null
           created_at: string
           display_name: string | null
           email: string
           id: string
+          phone: string | null
         }
         Insert: {
           avatar_style?: string | null
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           email: string
           id?: string
+          phone?: string | null
         }
         Update: {
           avatar_style?: string | null
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           email?: string
           id?: string
+          phone?: string | null
         }
         Relationships: []
       }
