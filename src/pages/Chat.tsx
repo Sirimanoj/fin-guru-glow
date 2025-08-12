@@ -68,6 +68,11 @@ const Chat = () => {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        if (!cancelled) setMessages(initial);
+        return;
+      }
       try {
         const rows = await listChatHistory({ avatarId: active, limit: 10 });
         const msgs: Msg[] = [];
@@ -79,7 +84,6 @@ const Chat = () => {
         });
         if (!cancelled) setMessages(msgs.length ? msgs : initial);
       } catch (e) {
-        console.warn("History load skipped:", e);
         if (!cancelled) setMessages(initial);
       }
     })();

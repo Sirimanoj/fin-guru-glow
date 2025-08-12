@@ -112,7 +112,9 @@ export async function listAvatars() {
 
 // -------- Chat History --------
 export async function listChatHistory(options?: { avatarId?: string; limit?: number }) {
-  const userId = await getUserId();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth?.user) return [];
+  const userId = auth.user.id;
   let query = supabase
     .from("chat_history")
     .select("*")
@@ -122,7 +124,7 @@ export async function listChatHistory(options?: { avatarId?: string; limit?: num
   if (options?.limit) query = query.limit(options.limit);
   const { data, error } = await query;
   if (error) throw error;
-  return data;
+  return data ?? [];
 }
 
 export async function addChatMessage(input: ChatMessageInput) {
