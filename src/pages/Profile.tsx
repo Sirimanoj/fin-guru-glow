@@ -162,53 +162,9 @@ useEffect(() => {
         </div>
       </Card>
 
+      <input id="avatar-file" type="file" accept="image/*" className="hidden" onChange={onUpload} disabled={uploading} />
+      
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="card-neo p-5">
-          <h3 className="font-medium">Profile Photo & Upload</h3>
-          <div
-            className="mt-4 grid gap-4 md:grid-cols-2"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault();
-              const file = e.dataTransfer.files?.[0];
-              if (file) {
-                const fakeEvent = { target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>;
-                onUpload(fakeEvent);
-              }
-            }}
-          >
-            <div className="w-full">
-              <AspectRatio ratio={1}>
-                {(localPreview || avatarUrl) ? (
-                  <img
-                    src={(localPreview || avatarUrl) as string}
-                    alt="Profile preview"
-                    className="h-full w-full object-cover rounded-xl border border-border shadow-sm"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="h-full w-full rounded-xl border border-dashed border-border/70 bg-muted/20 flex flex-col items-center justify-center text-sm text-muted-foreground">
-                    <Camera className="h-6 w-6 mb-2" />
-                    Drag & drop your photo here
-                    <span className="text-xs mt-1">or click to browse</span>
-                  </div>
-                )}
-              </AspectRatio>
-            </div>
-            <div className="flex flex-col justify-between">
-              <div className="space-y-2">
-                <Label htmlFor="avatar-file">Upload</Label>
-                <Input id="avatar-file" type="file" accept="image/*" className="rounded-2xl" onChange={onUpload} disabled={uploading} />
-                <p className="text-xs text-muted-foreground">Recommended: square image. Large images are auto-resized.</p>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="glass" className="rounded-2xl" onClick={triggerUpload} disabled={uploading}>
-                  {uploading ? "Uploading…" : "Choose Photo"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Card>
 
         <Card className="card-neo p-5">
           <h3 className="font-medium">Financial Style</h3>
