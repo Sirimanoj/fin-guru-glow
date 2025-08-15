@@ -37,10 +37,13 @@ const initial: Msg[] = [
 
 const Chat = () => {
   const [active, setActive] = useState("naval");
-  const [messages, setMessages] = useState<Msg[]>(initial);
+  const [chatHistories, setChatHistories] = useState<Record<string, Msg[]>>({});
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
+
+  // Get current messages for active avatar
+  const messages = chatHistories[active] || initial;
 
   const { isRecording, transcript, error: sttError, startRecording, stopRecording, reset } = useSpeechToText();
 
@@ -65,12 +68,23 @@ const Chat = () => {
     }
   }, [transcript, isRecording]);
 
+  // Helper function to update chat history for active avatar
+  const updateChatHistory = (newMessages: Msg[]) => {
+    setChatHistories(prev => ({
+      ...prev,
+      [active]: newMessages
+    }));
+  };
+
   useEffect(() => {
+    // Only load from database if we don't have cached messages for this avatar
+    if (chatHistories[active]) return;
+
     let cancelled = false;
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        if (!cancelled) setMessages(initial);
+        if (!cancelled) updateChatHistory(initial);
         return;
       }
       try {
@@ -82,22 +96,22 @@ const Chat = () => {
             msgs.push({ id: Date.now() + idx * 2 + 1, role: "ai", text: r.ai_response });
           }
         });
-        if (!cancelled) setMessages(msgs.length ? msgs : initial);
+        if (!cancelled) updateChatHistory(msgs.length ? msgs : initial);
       } catch (e) {
-        if (!cancelled) setMessages(initial);
+        if (!cancelled) updateChatHistory(initial);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [active]);
+  }, [active, chatHistories]);
 
 const handleSend = async (forcedText?: string) => {
     if (sending) return;
     const text = (forcedText ?? input).trim();
     if (!text) return;
     const userMsg: Msg = { id: Date.now(), role: "user", text };
-    setMessages((prev) => [...prev, userMsg]);
+    updateChatHistory([...messages, userMsg]);
     setInput("");
     setSending(true);
     try {
@@ -111,7 +125,7 @@ const handleSend = async (forcedText?: string) => {
       if (error) throw error;
       const replyText = data?.reply || "";
       const aiMsg: Msg = { id: Date.now() + 1, role: "ai", text: replyText };
-      setMessages((prev) => [...prev, aiMsg]);
+      updateChatHistory([...messages, userMsg, aiMsg]);
 
       try {
         await addChatMessage({ avatar_id: active, user_message: text, ai_response: replyText });
@@ -158,24 +172,52 @@ const handleSend = async (forcedText?: string) => {
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
           {messages.map((m) => (
             <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] p-3 rounded-2xl ${m.role === "user" ? "bg-accent/20" : "glass"}`}>
-                <p className="text-sm leading-relaxed">{m.text}</p>
-                {m.role === "ai" && (
-                  <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                    <button className="hover:text-accent flex items-center gap-1"><Play className="h-3 w-3"/> Voice</button>
-                    <span>•</span>
-                    <button className="hover:text-accent flex items-center gap-1"><Bookmark className="h-3 w-3"/> Bookmark</button>
+              {m.role === "user" ? (
+                <div className="max-w-[80%] p-3 rounded-2xl bg-accent/20 transition-all duration-200 hover:bg-accent/30">
+                  <p className="text-sm leading-relaxed">{m.text}</p>
+                </div>
+              ) : (
+                <Card className="max-w-[80%] card-neo p-4 hover-scale transition-all duration-300 hover:shadow-lg">
+                  <div className="flex items-start gap-3">
+                    <Avatar className={`${AVATARS.find(a => a.id === active)?.color} border border-border flex-shrink-0`}>
+                      <AvatarFallback className="text-xs">
+                        {AVATARS.find(a => a.id === active)?.name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm leading-relaxed mb-2">{m.text}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <button className="hover:text-accent transition-colors flex items-center gap-1">
+                          <Play className="h-3 w-3"/> Voice
+                        </button>
+                        <span>•</span>
+                        <button className="hover:text-accent transition-colors flex items-center gap-1">
+                          <Bookmark className="h-3 w-3"/> Bookmark
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
+                </Card>
+              )}
             </div>
           ))}
 
           {/* Typing indicator */}
           {sending && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Sparkles className="h-4 w-4" />
-              <div className="typing-dots"><span></span><span></span><span></span></div>
+            <div className="flex justify-start">
+              <Card className="max-w-[80%] card-neo p-4">
+                <div className="flex items-center gap-3">
+                  <Avatar className={`${AVATARS.find(a => a.id === active)?.color} border border-border flex-shrink-0`}>
+                    <AvatarFallback className="text-xs">
+                      {AVATARS.find(a => a.id === active)?.name[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Sparkles className="h-4 w-4" />
+                    <div className="typing-dots"><span></span><span></span><span></span></div>
+                  </div>
+                </div>
+              </Card>
             </div>
           )}
         </div>
