@@ -26,8 +26,8 @@ export const BudgetRow = ({ item, onChange, onRemove }: BudgetRowProps) => {
           placeholder="0"
           type="number"
           className="rounded-2xl"
-          value={Number.isFinite(item.amount) ? item.amount : 0}
-          onChange={(e) => onChange({ ...item, amount: Number(e.target.value || 0) })}
+          value={Number.isFinite(item.amount) && item.amount !== 0 ? item.amount : ""}
+          onChange={(e) => onChange({ ...item, amount: Number(e.target.value) || 0 })}
         />
       </div>
       <div className="col-span-1 flex justify-end">

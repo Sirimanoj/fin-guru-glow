@@ -22,13 +22,6 @@ const Settings = () => {
         </div>
       </Card>
 
-      <Card className="card-neo p-5 mt-6">
-        <h3 className="font-medium">API Keys</h3>
-        <div className="mt-3">
-          <Label htmlFor="api">Personal API key</Label>
-          <Input id="api" type="password" placeholder="••••••••••" className="rounded-2xl mt-1" />
-        </div>
-      </Card>
 
       <Card className="card-neo p-5 mt-6">
         <h3 className="font-medium">Privacy</h3>

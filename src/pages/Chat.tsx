@@ -222,31 +222,59 @@ const handleSend = async (forcedText?: string) => {
           )}
         </div>
 
-        {/* Input */}
-        <div className="mt-4 flex items-center gap-2">
-          <Button
-            variant={isRecording ? "hero" : "glass"}
-            size="icon"
-            aria-label={isRecording ? "Stop recording" : "Start recording"}
-            onClick={() => (isRecording ? stopRecording() : startRecording())}
-            disabled={sending}
-            className={isRecording ? "pulse" : ""}
-          >
-            <Mic />
-          </Button>
-          {isRecording && <span className="text-xs text-accent ml-1">Listening…</span>}
-          <Input
-            placeholder="Ask about budgets, investing, or goals..."
-            className="rounded-2xl"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSend();
-            }}
-          />
-          <Button variant="hero" aria-label="Send" onClick={() => handleSend()} disabled={sending || !input.trim()}>
-            <Send />
-          </Button>
+        {/* Modern Chat Input */}
+        <div className="mt-6 relative">
+          <div className="flex items-end gap-3 p-4 rounded-2xl border border-border bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200">
+            <Button
+              variant={isRecording ? "hero" : "ghost"}
+              size="icon"
+              aria-label={isRecording ? "Stop recording" : "Start recording"}
+              onClick={() => (isRecording ? stopRecording() : startRecording())}
+              disabled={sending}
+              className={`rounded-xl ${isRecording ? "pulse" : ""}`}
+            >
+              <Mic className="h-4 w-4" />
+            </Button>
+            
+            <div className="flex-1 min-h-[40px] max-h-[120px] overflow-y-auto">
+              <textarea
+                placeholder="Ask about budgets, investing, or goals..."
+                className="w-full bg-transparent border-0 resize-none outline-none text-sm leading-relaxed placeholder:text-muted-foreground py-2"
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  // Auto-resize
+                  e.target.style.height = 'auto';
+                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                rows={1}
+                style={{ height: 'auto' }}
+              />
+            </div>
+            
+            <Button 
+              variant="hero" 
+              size="icon"
+              aria-label="Send" 
+              onClick={() => handleSend()} 
+              disabled={sending || !input.trim()}
+              className="rounded-xl"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {isRecording && (
+            <div className="absolute -top-8 left-4 text-xs text-accent animate-pulse">
+              Listening...
+            </div>
+          )}
         </div>
       </Card>
 
