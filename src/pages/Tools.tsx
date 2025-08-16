@@ -124,8 +124,12 @@ const Tools = () => {
                   type="number"
                   placeholder="$"
                   className="rounded-2xl mt-1"
-                  value={income || ""}
-                  onChange={(e) => setIncome(Number(e.target.value) || 0)}
+                  value={income === 0 ? "" : income.toString()}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    console.log("Income input change:", value);
+                    setIncome(value === "" ? 0 : Number(value));
+                  }}
                 />
               </div>
             </div>
@@ -190,8 +194,12 @@ const Tools = () => {
                   type="number"
                   placeholder="$"
                   className="rounded-2xl mt-1"
-                  value={savingsGoal || ""}
-                  onChange={(e) => setSavingsGoal(Number(e.target.value) || 0)}
+                  value={savingsGoal === 0 ? "" : savingsGoal.toString()}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    console.log("Savings input change:", value);
+                    setSavingsGoal(value === "" ? 0 : Number(value));
+                  }}
                 />
               </div>
               <div className="flex items-end">
