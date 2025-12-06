@@ -5,9 +5,10 @@ import {
 import { TrendingUp, TrendingDown, DollarSign, Target, Activity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useGamification } from '../context/GamificationContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../components/ui/button';
 import MoodTracker from '../components/MoodTracker';
+import { InstallPrompt } from '../components/InstallPrompt';
 
 const data = [
     { name: 'Jan', income: 4000, expenses: 2400 },
@@ -31,8 +32,11 @@ const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981'];
 const Dashboard = () => {
     const { t } = useTranslation();
     const { checkStreak, performDailyCheckIn, lastCheckIn } = useGamification();
+    const [userSegment, setUserSegment] = useState<string | null>(null);
 
     useEffect(() => {
+        const segment = localStorage.getItem('fin_user_segment');
+        if (segment) setUserSegment(segment);
         checkStreak();
     }, []);
 
@@ -43,6 +47,15 @@ const Dashboard = () => {
         return today.setHours(0, 0, 0, 0) === last.setHours(0, 0, 0, 0);
     };
 
+    const getSegmentTip = () => {
+        switch (userSegment) {
+            case 'Saver': return "Tip: Try the 50/30/20 rule to boost your savings.";
+            case 'Investor': return "Market Update: Tech sector is rallying. Check your portfolio.";
+            case 'Learner': return "Did you know? Compound interest is the 8th wonder of the world.";
+            default: return "Track your expenses to find savings opportunities.";
+        }
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <header className="flex justify-between items-end gap-4 flex-wrap md:flex-nowrap">
@@ -50,7 +63,14 @@ const Dashboard = () => {
                     <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-500">
                         {t('financial_dashboard')}
                     </h1>
-                    <p className="text-muted-foreground">{t('welcome_back')}</p>
+                    <p className="text-muted-foreground">
+                        {userSegment ? `Welcome back, ${userSegment}!` : t('welcome_back')}
+                    </p>
+                    {userSegment && (
+                        <div className="mt-2 text-sm text-primary bg-primary/10 px-3 py-1 rounded-full w-fit">
+                            {getSegmentTip()}
+                        </div>
+                    )}
                 </div>
                 <div className="text-right flex items-center gap-4">
                     <Button
@@ -216,6 +236,7 @@ const Dashboard = () => {
                     ))}
                 </div>
             </div>
+            <InstallPrompt />
         </div>
     );
 };

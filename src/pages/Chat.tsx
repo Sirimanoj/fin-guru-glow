@@ -44,14 +44,17 @@ const Chat = () => {
     const { t } = useTranslation();
     const { personaId } = useParams<{ personaId: string }>();
     const navigate = useNavigate();
-    const activePersona = (personaId as Persona) || 'warren';
+
+    // Get preferred persona from storage or default to warren
+    const preferredPersona = (localStorage.getItem('fin_preferred_persona') as Persona) || 'warren';
+    const activePersona = (personaId as Persona) || preferredPersona;
 
     // Validate persona
     useEffect(() => {
         if (!PERSONAS[activePersona]) {
-            navigate('/chat/warren');
+            navigate(`/chat/${preferredPersona}`);
         }
-    }, [activePersona, navigate]);
+    }, [activePersona, navigate, preferredPersona]);
 
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<Message[]>([]);

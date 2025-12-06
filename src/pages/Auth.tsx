@@ -6,7 +6,14 @@ const Auth = () => {
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         // Mock login
-        navigate('/dashboard');
+        // Check if onboarding is complete (mock check)
+        const onboardingCompleted = localStorage.getItem('fin_onboarding_completed') === 'true';
+
+        if (!onboardingCompleted) {
+            navigate('/survey');
+        } else {
+            navigate('/dashboard');
+        }
     };
 
     return (

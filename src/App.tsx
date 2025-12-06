@@ -7,6 +7,7 @@ import Tools from './pages/Tools';
 import Profile from './pages/Profile';
 import Landing from './pages/Landing';
 import Auth from './pages/Auth';
+import Survey from './pages/Survey';
 
 import { useEffect } from 'react';
 import { NotificationService } from './services/NotificationService';
@@ -26,6 +27,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/survey" element={<Survey />} />
 
             {/* Protected Routes (Mocked for now) */}
             <Route element={<Layout />}>
