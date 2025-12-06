@@ -96,7 +96,7 @@ const Tools = () => {
                             <div>
                                 <label className="block text-sm font-medium mb-1 text-muted-foreground">Monthly Income</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
                                     <input
                                         type="number"
                                         value={income}
@@ -108,7 +108,7 @@ const Tools = () => {
                             <div>
                                 <label className="block text-sm font-medium mb-1 text-muted-foreground">Savings Goal</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
                                     <input
                                         type="number"
                                         value={savingsGoal}
@@ -138,7 +138,7 @@ const Tools = () => {
                                         className="flex-1 bg-background/30 border border-border rounded-lg p-2 text-sm"
                                     />
                                     <div className="relative w-32">
-                                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
+                                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
                                         <input
                                             type="number"
                                             value={expense.amount}
@@ -172,7 +172,7 @@ const Tools = () => {
                                         className="flex-1 bg-background/30 border border-border rounded-lg p-2 text-sm"
                                     />
                                     <div className="relative w-32">
-                                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
+                                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
                                         <input
                                             type="number"
                                             value={expense.amount}
@@ -207,7 +207,7 @@ const Tools = () => {
                                         dataKey="value"
                                     >
                                         {chartData.map((_, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            <Cell key={`cell-₹{index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>
                                     <Tooltip
@@ -222,20 +222,20 @@ const Tools = () => {
                         <div className="space-y-4 border-t border-border pt-4">
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Total Income</span>
-                                <span className="font-medium text-green-400">+${income.toFixed(2)}</span>
+                                <span className="font-medium text-green-400">+₹{income.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Total Expenses</span>
-                                <span className="font-medium text-red-400">-${totals.totalExpenses.toFixed(2)}</span>
+                                <span className="font-medium text-red-400">-₹{totals.totalExpenses.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Savings Goal</span>
-                                <span className="font-medium text-blue-400">-${savingsGoal.toFixed(2)}</span>
+                                <span className="font-medium text-blue-400">-₹{savingsGoal.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-lg font-bold border-t border-border pt-4">
                                 <span>Leftover</span>
                                 <span className={totals.leftover >= 0 ? 'text-primary' : 'text-destructive'}>
-                                    ${totals.leftover.toFixed(2)}
+                                    ₹{totals.leftover.toFixed(2)}
                                 </span>
                             </div>
                         </div>

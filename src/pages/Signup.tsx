@@ -16,7 +16,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-const handleSignup = async () => {
+  const handleSignup = async () => {
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -75,9 +75,9 @@ const handleSignup = async () => {
       <Card className="card-neo p-8">
         <h1 className="font-grotesk text-2xl mb-6 text-center">Create your account</h1>
         <div className="space-y-3">
-          <Input placeholder="Name" className="rounded-2xl" value={name} onChange={(e) => setName(e.target.value)} />
-          <Input placeholder="Email" className="rounded-2xl" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <Input placeholder="Password" type="password" className="rounded-2xl" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input placeholder="Name" className="rounded-2xl" value={name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)} />
+          <Input placeholder="Email" className="rounded-2xl" value={email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} />
+          <Input placeholder="Password" type="password" className="rounded-2xl" value={password} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)} />
           <Button variant="hero" className="w-full" onClick={handleSignup} disabled={loading || !email || !password}>
             {loading ? "Creating..." : "Sign up"}
           </Button>

@@ -3,6 +3,11 @@ import {
     PieChart, Pie, Cell
 } from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, Target, Activity } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useGamification } from '../context/GamificationContext';
+import { useEffect } from 'react';
+import { Button } from '../components/ui/button';
+import MoodTracker from '../components/MoodTracker';
 
 const data = [
     { name: 'Jan', income: 4000, expenses: 2400 },
@@ -24,20 +29,40 @@ const portfolioData = [
 const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981'];
 
 const Dashboard = () => {
+    const { t } = useTranslation();
+    const { checkStreak, performDailyCheckIn, lastCheckIn } = useGamification();
+
+    useEffect(() => {
+        checkStreak();
+    }, []);
+
+    const isCheckedInToday = () => {
+        if (!lastCheckIn) return false;
+        const today = new Date();
+        const last = new Date(lastCheckIn);
+        return today.setHours(0, 0, 0, 0) === last.setHours(0, 0, 0, 0);
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <header className="flex justify-between items-end">
+            <header className="flex justify-between items-end gap-4 flex-wrap md:flex-nowrap">
                 <div>
                     <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-500">
-                        Financial Dashboard
+                        {t('financial_dashboard')}
                     </h1>
-                    <p className="text-muted-foreground">Welcome back, Future Billionaire.</p>
+                    <p className="text-muted-foreground">{t('welcome_back')}</p>
                 </div>
-                <div className="text-right">
-                    <p className="text-sm text-muted-foreground">FinScore</p>
-                    <div className="text-3xl font-bold text-primary flex items-center gap-2">
-                        850 <Activity size={24} />
-                    </div>
+                <div className="text-right flex items-center gap-4">
+                    <Button
+                        onClick={performDailyCheckIn}
+                        disabled={isCheckedInToday()}
+                        className={isCheckedInToday()
+                            ? "bg-secondary text-muted-foreground border-0"
+                            : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white border-0"
+                        }
+                    >
+                        {isCheckedInToday() ? "Checked In ✅" : "Daily Check-in (+50 XP)"}
+                    </Button>
                 </div>
             </header>
 
@@ -47,8 +72,8 @@ const Dashboard = () => {
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <DollarSign size={64} />
                     </div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Total Balance</h3>
-                    <p className="text-2xl font-bold mt-2">$24,500.00</p>
+                    <h3 className="text-sm font-medium text-muted-foreground">{t('total_balance')}</h3>
+                    <p className="text-2xl font-bold mt-2">₹24,500.00</p>
                     <div className="flex items-center gap-1 text-green-400 text-sm mt-2">
                         <TrendingUp size={16} /> +12.5%
                     </div>
@@ -58,8 +83,8 @@ const Dashboard = () => {
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <TrendingDown size={64} />
                     </div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Monthly Expenses</h3>
-                    <p className="text-2xl font-bold mt-2">$1,250.00</p>
+                    <h3 className="text-sm font-medium text-muted-foreground">{t('monthly_expenses')}</h3>
+                    <p className="text-2xl font-bold mt-2">₹1,250.00</p>
                     <div className="flex items-center gap-1 text-red-400 text-sm mt-2">
                         <TrendingUp size={16} /> +2.1%
                     </div>
@@ -69,8 +94,8 @@ const Dashboard = () => {
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Target size={64} />
                     </div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Savings Goal</h3>
-                    <p className="text-2xl font-bold mt-2">$8,000 / $10k</p>
+                    <h3 className="text-sm font-medium text-muted-foreground">{t('savings_goal')}</h3>
+                    <p className="text-2xl font-bold mt-2">₹8,000 / ₹10k</p>
                     <div className="w-full bg-secondary h-2 rounded-full mt-3 overflow-hidden">
                         <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-full w-[80%]" />
                     </div>
@@ -80,8 +105,8 @@ const Dashboard = () => {
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Activity size={64} />
                     </div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Investment Return</h3>
-                    <p className="text-2xl font-bold mt-2">+ $3,400.00</p>
+                    <h3 className="text-sm font-medium text-muted-foreground">{t('investment_return')}</h3>
+                    <p className="text-2xl font-bold mt-2">+ ₹3,400.00</p>
                     <div className="flex items-center gap-1 text-green-400 text-sm mt-2">
                         <TrendingUp size={16} /> +15.2%
                     </div>
@@ -92,7 +117,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Income vs Expenses Chart */}
                 <div className="lg:col-span-2 glass-card p-6 rounded-xl min-h-[400px]">
-                    <h3 className="text-lg font-semibold mb-6">Income vs Expenses</h3>
+                    <h3 className="text-lg font-semibold mb-6">{t('income_vs_expenses')}</h3>
                     <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={data}>
@@ -120,39 +145,45 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* Portfolio Allocation */}
-                <div className="glass-card p-6 rounded-xl min-h-[400px]">
-                    <h3 className="text-lg font-semibold mb-6">Portfolio Allocation</h3>
-                    <div className="h-[300px] w-full relative">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={portfolioData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={100}
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                >
-                                    {portfolioData.map((_, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: 'rgba(17, 24, 39, 0.8)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                                    itemStyle={{ color: '#fff' }}
-                                />
-                            </PieChart>
-                        </ResponsiveContainer>
-                        {/* Legend */}
-                        <div className="absolute bottom-0 w-full flex justify-center gap-4 flex-wrap">
-                            {portfolioData.map((entry, index) => (
-                                <div key={entry.name} className="flex items-center gap-2 text-xs">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index] }} />
-                                    <span className="text-muted-foreground">{entry.name}</span>
-                                </div>
-                            ))}
+                {/* Portfolio Allocation & Mood Tracker */}
+                <div className="space-y-6">
+                    <MoodTracker />
+
+                    <div className="glass-card p-6 rounded-xl min-h-[300px]">
+                        <h3 className="text-lg font-semibold mb-6">{t('portfolio_allocation')}</h3>
+                        <div className="flex flex-col items-center justify-center">
+                            <div className="h-[200px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={portfolioData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={60}
+                                            outerRadius={80}
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                        >
+                                            {portfolioData.map((_, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: 'rgba(17, 24, 39, 0.8)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                                            itemStyle={{ color: '#fff' }}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                            {/* Legend */}
+                            <div className="mt-4 flex justify-center gap-4 flex-wrap">
+                                {portfolioData.map((entry, index) => (
+                                    <div key={entry.name} className="flex items-center gap-2 text-xs">
+                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index] }} />
+                                        <span className="text-muted-foreground">{entry.name}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -160,7 +191,7 @@ const Dashboard = () => {
 
             {/* Recent Transactions */}
             <div className="glass-card p-6 rounded-xl">
-                <h3 className="text-lg font-semibold mb-4">Recent Transactions</h3>
+                <h3 className="text-lg font-semibold mb-4">{t('recent_transactions')}</h3>
                 <div className="space-y-4">
                     {[
                         { name: 'Apple Store', cat: 'Electronics', amount: -1299.00, date: 'Today' },

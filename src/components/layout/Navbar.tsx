@@ -5,7 +5,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getMyProfile } from "@/integrations/supabase/db";
+import { LanguageSwitcher } from "../LanguageSwitcher";
+import { useTranslation } from "react-i18next";
+
 export const Navbar = () => {
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
   const [authed, setAuthed] = useState(false);
   const [profileName, setProfileName] = useState<string>("");
@@ -23,7 +27,7 @@ export const Navbar = () => {
             const p = await getMyProfile();
             setProfileName(p?.display_name || session!.user!.email || "");
             setAvatarUrl(p?.avatar_url || null);
-          } catch {}
+          } catch { }
         }, 0);
       } else {
         setProfileName("");
@@ -40,7 +44,7 @@ export const Navbar = () => {
             const p = await getMyProfile();
             setProfileName(p?.display_name || session!.user!.email || "");
             setAvatarUrl(p?.avatar_url || null);
-          } catch {}
+          } catch { }
         }, 0);
       }
     });
@@ -59,24 +63,25 @@ export const Navbar = () => {
         {!isMobile && (
           <div className="hidden md:flex items-center gap-1 text-sm">
             <NavLink to="/dashboard" className={linkCls} end>
-              Dashboard
+              {t('dashboard')}
             </NavLink>
             <NavLink to="/chat" className={linkCls} end>
-              Chat
+              {t('chat')}
             </NavLink>
             <NavLink to="/tools" className={linkCls} end>
-              FinCoach Tools
+              {t('tools')}
             </NavLink>
             <NavLink to="/profile" className={linkCls} end>
-              Profile
+              {t('profile')}
             </NavLink>
             <NavLink to="/settings" className={linkCls} end>
-              Settings
+              {t('settings')}
             </NavLink>
           </div>
         )}
 
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           {authed ? (
             <Link to="/profile" className="flex items-center gap-2 hover-scale">
               <Avatar className="h-8 w-8 border border-border">
@@ -88,10 +93,10 @@ export const Navbar = () => {
           ) : (
             <>
               <Button asChild variant="glass" size={isMobile ? "sm" : "default"}>
-                <Link to="/login">Log in</Link>
+                <Link to="/login">{t('login')}</Link>
               </Button>
               <Button asChild variant="hero" size={isMobile ? "sm" : "lg"}>
-                <Link to="/chat">Start Chatting</Link>
+                <Link to="/chat">{t('start_chatting')}</Link>
               </Button>
             </>
           )}

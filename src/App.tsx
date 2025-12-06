@@ -8,27 +8,38 @@ import Profile from './pages/Profile';
 import Landing from './pages/Landing';
 import Auth from './pages/Auth';
 
+import { useEffect } from 'react';
+import { NotificationService } from './services/NotificationService';
+import { GamificationProvider } from './context/GamificationContext';
+
 const queryClient = new QueryClient();
 
 function App() {
+  useEffect(() => {
+    NotificationService.init();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/auth" element={<Auth />} />
+      <GamificationProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} />
 
-          {/* Protected Routes (Mocked for now) */}
-          <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/tools" element={<Tools />} />
-            <Route path="/profile" element={<Profile />} />
-          </Route>
+            {/* Protected Routes (Mocked for now) */}
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/chat" element={<Navigate to="/chat/warren" replace />} />
+              <Route path="/chat/:personaId" element={<Chat />} />
+              <Route path="/tools" element={<Tools />} />
+              <Route path="/profile" element={<Profile />} />
+            </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </GamificationProvider>
     </QueryClientProvider>
   );
 }
