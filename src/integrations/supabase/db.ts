@@ -1,5 +1,10 @@
 import { supabase } from "./client";
 
+export interface MonthlyExpenseItem {
+  label: string;
+  amount: number;
+}
+
 export const upsertUserProfile = async (profile: { display_name?: string; avatar_url?: string; email?: string; age?: number }) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("No user logged in");

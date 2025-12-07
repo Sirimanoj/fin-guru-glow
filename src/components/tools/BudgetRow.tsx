@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { MonthlyExpenseItem } from "@/integrations/supabase/db";
+import type { MonthlyExpenseItem } from "@/integrations/supabase/db";
 
 interface BudgetRowProps {
   item: MonthlyExpenseItem;

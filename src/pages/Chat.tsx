@@ -144,7 +144,8 @@ const Chat = () => {
                 // Inject context as the first history item
                 history.unshift({ role: "user", content: contextMessage });
 
-                const response = await fetch('http://localhost:8000/api/chat', {
+                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+                const response = await fetch(`${apiUrl}/api/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
