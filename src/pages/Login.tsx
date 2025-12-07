@@ -26,15 +26,15 @@ const Login = () => {
     navigate("/dashboard");
   };
 
-  const loginWithProvider = async (provider: "google" | "apple") => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: window.location.origin },
-    });
-    if (error) {
-      toast({ title: "OAuth error", description: error.message, variant: "destructive" });
-    }
-  };
+  // const loginWithProvider = async (provider: "google" | "apple") => {
+  //   const { error } = await supabase.auth.signInWithOAuth({
+  //     provider,
+  //     options: { redirectTo: window.location.origin },
+  //   });
+  //   if (error) {
+  //     toast({ title: "OAuth error", description: error.message, variant: "destructive" });
+  //   }
+  // };
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4 bg-background">
@@ -46,10 +46,10 @@ const Login = () => {
           <Button variant="hero" className="w-full" onClick={handleLogin} disabled={loading}>
             {loading ? "Logging in..." : "Log in"}
           </Button>
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="glass" onClick={() => loginWithProvider("google")}>Continue with Google</Button>
-            <Button variant="glass" onClick={() => loginWithProvider("apple")}>Continue with Apple</Button>
-          </div>
+          {/* <div className="grid grid-cols-2 gap-2"> */}
+          {/* <Button variant="glass" onClick={() => loginWithProvider("google")}>Continue with Google</Button>  */}
+          {/* <Button variant="glass" onClick={() => loginWithProvider("apple")}>Continue with Apple</Button> */}
+          {/* </div>  */}
           <p className="text-xs text-muted-foreground text-center">
             No account?{" "}
             <Link to="/signup" className="text-accent underline-offset-4 hover:underline">
