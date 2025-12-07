@@ -6,7 +6,7 @@ from typing import List, Optional
 # Force reload for new data
 import re
 import os
-from rag_engine import RAGEngine
+from .rag_engine import RAGEngine
 
 app = FastAPI(title="Financial Advisor RAG API")
 
