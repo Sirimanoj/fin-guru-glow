@@ -161,19 +161,23 @@ class RAGEngine:
         all_scored_chunks.sort(key=lambda x: x["score"], reverse=True)
         return all_scored_chunks[:top_k]
 
-    def chat(self, query: str, history: list = None, locale: str = "en-IN", persona: str = "default"):
+    def chat(self, query: str, history: list = None, locale: str = "en-IN", persona: str = "default", lite_mode: bool = True):
         if not self.client:
              raise ValueError("GEMINI_API_KEY not configured")
 
         # 1. Contextualize
         standalone_query = self.contextualize_query(query, history)
         
-        # 2. Expand
-        search_queries = self.expand_query(standalone_query)
-        print(f"Searching for: {search_queries}") # Debug log
+        # 2. Expand (Skip in lite_mode to save 4+ API calls)
+        if lite_mode:
+            search_queries = [standalone_query]
+            print(f"Lite Mode Search: {search_queries}")
+        else:
+            search_queries = self.expand_query(standalone_query)
+            print(f"Expanded Search: {search_queries}")
         
         # 3. Retrieve
-        context_chunks = self.retrieve(search_queries, persona=persona)
+        context_chunks = self.retrieve(search_queries, top_k=5, persona=persona)
         context_text = "\n\n".join(
             f"--- Source: {c.get('title', 'Unknown')} (Section: {c.get('section', 'General')}) ---\n{c['text']}" 
             for c in context_chunks
