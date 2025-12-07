@@ -104,19 +104,16 @@ const Chat = () => {
         // Enhanced Mock Response Logic
         setTimeout(() => {
             const lowerInput = input.toLowerCase();
-            let response = t('default_response');
+            let topic = 'default';
 
             if (lowerInput.includes('invest') || lowerInput.includes('stock') || lowerInput.includes('buy')) {
-                response = t('invest_response');
+                topic = 'invest';
             } else if (lowerInput.includes('crypto') || lowerInput.includes('bitcoin')) {
-                response = t('crypto_response');
-            } else if (lowerInput.includes('save') || lowerInput.includes('budget')) {
-                // response = t('save_response'); // Assuming save_response exists or fallback
-                response = t('invest_response'); // Fallback for now as save_response wasn't added to i18n
-            } else if (lowerInput.includes('market') || lowerInput.includes('economy')) {
-                // response = t('market_response');
-                response = t('default_response');
+                topic = 'crypto';
             }
+
+            // Construct the key dynamically: e.g., 'warren_invest_response'
+            const response = t(`${activePersona}_${topic}_response`);
 
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),

@@ -2,23 +2,15 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell
 } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, Target, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, IndianRupee, Target, Activity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useGamification } from '../context/GamificationContext';
+import { getMyProfile } from '@/integrations/supabase/db';
 import { useEffect, useState } from 'react';
 import { Button } from '../components/ui/button';
 import MoodTracker from '../components/MoodTracker';
 import { InstallPrompt } from '../components/InstallPrompt';
-
-const data = [
-    { name: 'Jan', income: 4000, expenses: 2400 },
-    { name: 'Feb', income: 3000, expenses: 1398 },
-    { name: 'Mar', income: 2000, expenses: 9800 },
-    { name: 'Apr', income: 2780, expenses: 3908 },
-    { name: 'May', income: 1890, expenses: 4800 },
-    { name: 'Jun', income: 2390, expenses: 3800 },
-    { name: 'Jul', income: 3490, expenses: 4300 },
-];
+import { EditFinancialsDialog } from '../components/dashboard/EditFinancialsDialog';
 
 const portfolioData = [
     { name: 'Stocks', value: 400 },
@@ -33,12 +25,61 @@ const Dashboard = () => {
     const { t } = useTranslation();
     const { checkStreak, performDailyCheckIn, lastCheckIn } = useGamification();
     const [userSegment, setUserSegment] = useState<string | null>(null);
+    const [financials, setFinancials] = useState({
+        monthly_salary: 0,
+        total_balance: 0,
+        monthly_expenses: 0,
+        savings_goal_target: 0,
+        current_savings: 0,
+        investment_portfolio_value: 0
+    });
+    const [chartData, setChartData] = useState<any[]>([]);
 
     useEffect(() => {
-        const segment = localStorage.getItem('fin_user_segment');
-        if (segment) setUserSegment(segment);
+        const loadProfile = async () => {
+            const profile = await getMyProfile();
+            if (profile) {
+                if (profile.display_name) setUserSegment(profile.display_name);
+
+                const newFinancials = {
+                    monthly_salary: profile.monthly_salary || 0,
+                    total_balance: profile.total_balance || 0,
+                    monthly_expenses: profile.monthly_expenses || 0,
+                    savings_goal_target: profile.savings_goal_target || 0,
+                    current_savings: profile.current_savings || 0,
+                    investment_portfolio_value: profile.investment_portfolio_value || 0
+                };
+                setFinancials(newFinancials);
+                generateChartData(newFinancials.monthly_salary, newFinancials.monthly_expenses);
+            } else {
+                const segment = localStorage.getItem('fin_user_segment');
+                if (segment) setUserSegment(segment);
+                generateChartData(50000, 30000); // Default mock
+            }
+        };
+        loadProfile();
         checkStreak();
     }, []);
+
+    const generateChartData = (income: number, expenses: number) => {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
+        // Avoid zeros for nicer looking graphs if data is missing
+        const baseIncome = income || 5000;
+        const baseExpenses = expenses || 3000;
+
+        const newData = months.map(month => {
+            // Visualize "Ups and Downs" by adding random variance to the baseline
+            const incomeVariance = (Math.random() * 0.2 - 0.1) * baseIncome; // +/- 10%
+            const expenseVariance = (Math.random() * 0.3 - 0.15) * baseExpenses; // +/- 15%
+
+            return {
+                name: month,
+                income: Math.max(0, Math.floor(baseIncome + incomeVariance)),
+                expenses: Math.max(0, Math.floor(baseExpenses + expenseVariance))
+            };
+        });
+        setChartData(newData);
+    };
 
     const isCheckedInToday = () => {
         if (!lastCheckIn) return false;
@@ -64,7 +105,7 @@ const Dashboard = () => {
                         {t('financial_dashboard')}
                     </h1>
                     <p className="text-muted-foreground">
-                        {userSegment ? `Welcome back, ${userSegment}!` : t('welcome_back')}
+                        Welcome back, {userSegment || 'Friend'}!
                     </p>
                     {userSegment && (
                         <div className="mt-2 text-sm text-primary bg-primary/10 px-3 py-1 rounded-full w-fit">
@@ -89,11 +130,19 @@ const Dashboard = () => {
             {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="glass-card p-6 rounded-xl relative overflow-hidden group hover:scale-[1.02] transition-transform">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <DollarSign size={64} />
+                    <div className="flex justify-between items-start">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <IndianRupee size={64} />
+                        </div>
+                        <div className="z-10 bg-background/50 backdrop-blur-sm rounded-full">
+                            <EditFinancialsDialog
+                                initialData={financials}
+                                onUpdate={() => window.location.reload()}
+                            />
+                        </div>
                     </div>
                     <h3 className="text-sm font-medium text-muted-foreground">{t('total_balance')}</h3>
-                    <p className="text-2xl font-bold mt-2">₹24,500.00</p>
+                    <p className="text-2xl font-bold mt-2">₹{financials.total_balance.toLocaleString()}</p>
                     <div className="flex items-center gap-1 text-green-400 text-sm mt-2">
                         <TrendingUp size={16} /> +12.5%
                     </div>
@@ -104,7 +153,7 @@ const Dashboard = () => {
                         <TrendingDown size={64} />
                     </div>
                     <h3 className="text-sm font-medium text-muted-foreground">{t('monthly_expenses')}</h3>
-                    <p className="text-2xl font-bold mt-2">₹1,250.00</p>
+                    <p className="text-2xl font-bold mt-2">₹{financials.monthly_expenses.toLocaleString()}</p>
                     <div className="flex items-center gap-1 text-red-400 text-sm mt-2">
                         <TrendingUp size={16} /> +2.1%
                     </div>
@@ -115,9 +164,14 @@ const Dashboard = () => {
                         <Target size={64} />
                     </div>
                     <h3 className="text-sm font-medium text-muted-foreground">{t('savings_goal')}</h3>
-                    <p className="text-2xl font-bold mt-2">₹8,000 / ₹10k</p>
+                    <p className="text-2xl font-bold mt-2">
+                        ₹{financials.current_savings.toLocaleString()} / ₹{financials.savings_goal_target > 0 ? (financials.savings_goal_target / 1000) + 'k' : '0'}
+                    </p>
                     <div className="w-full bg-secondary h-2 rounded-full mt-3 overflow-hidden">
-                        <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-full w-[80%]" />
+                        <div
+                            className="bg-gradient-to-r from-purple-500 to-blue-500 h-full transition-all duration-500"
+                            style={{ width: `${Math.min(((financials.current_savings / (financials.savings_goal_target || 1)) * 100), 100)}%` }}
+                        />
                     </div>
                 </div>
 
@@ -126,7 +180,7 @@ const Dashboard = () => {
                         <Activity size={64} />
                     </div>
                     <h3 className="text-sm font-medium text-muted-foreground">{t('investment_return')}</h3>
-                    <p className="text-2xl font-bold mt-2">+ ₹3,400.00</p>
+                    <p className="text-2xl font-bold mt-2">₹{financials.investment_portfolio_value.toLocaleString()}</p>
                     <div className="flex items-center gap-1 text-green-400 text-sm mt-2">
                         <TrendingUp size={16} /> +15.2%
                     </div>
@@ -140,7 +194,7 @@ const Dashboard = () => {
                     <h3 className="text-lg font-semibold mb-6">{t('income_vs_expenses')}</h3>
                     <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={data}>
+                            <AreaChart data={chartData}>
                                 <defs>
                                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
@@ -222,7 +276,7 @@ const Dashboard = () => {
                         <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-card/30 hover:bg-card/50 transition-colors">
                             <div className="flex items-center gap-4">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.amount > 0 ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
-                                    <DollarSign size={20} />
+                                    <IndianRupee size={20} />
                                 </div>
                                 <div>
                                     <p className="font-medium">{tx.name}</p>

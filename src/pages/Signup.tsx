@@ -12,6 +12,7 @@ const Signup = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [name, setName] = useState("");
+  const [age, setAge] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,38 +24,47 @@ const Signup = () => {
       password,
       options: { emailRedirectTo: window.location.origin },
     });
-    if (error) {
-      toast({ title: "Signup failed", description: error.message, variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    // If email confirmation is required, session will be null
-    if (!data.session) {
-      toast({
-        title: "Confirm your email",
-        description: "We've sent you a confirmation link. Verify to complete signup.",
-      });
-      setLoading(false);
-      navigate("/login");
-      return;
-    }
-
     try {
+      if (error) {
+        console.error("Supabase Signup Error:", error);
+        toast({ title: "Signup failed", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      // If email confirmation is required, session will be null
+      if (!data.session) {
+        console.log("Signup success but no session (email confirmation needed)");
+        toast({
+          title: "Confirm your email",
+          description: "We've sent you a confirmation link. Verify to complete signup.",
+        });
+        navigate("/login");
+        return;
+      }
+
+      console.log("Signup success, session established. Updating profile...", { email, name, age });
+
       // Upsert profile and default settings only when session exists
-      await upsertUserProfile({ email, display_name: name });
+      await upsertUserProfile({ email, display_name: name, age: parseInt(age) });
+      console.log("Profile updated. Setting up default settings...");
+
       await upsertSettings({ notifications: true });
+      console.log("Settings updated. Redirecting to survey...");
+
       toast({
         title: "Account created",
-        description: "Welcome to FinCoach! Your profile has been set up.",
+        description: "Welcome to FinCoach! Let's personalize your experience.",
       });
-      navigate("/dashboard");
+      navigate("/survey");
     } catch (err: any) {
+      console.error("Post-Signup Setup Error:", err);
       toast({
-        title: "Profile setup error",
-        description: err.message || "We created your account but couldn't finish the setup.",
+        title: "Setup incomplete",
+        description: "Account created, but profile setup failed. Proceeding to survey...",
         variant: "destructive",
       });
+      // Proceed to survey anyway to avoid blocking the user
+      navigate("/survey");
     } finally {
       setLoading(false);
     }
@@ -71,14 +81,15 @@ const Signup = () => {
   };
 
   return (
-    <main className="container py-16 max-w-lg">
-      <Card className="card-neo p-8">
+    <main className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-lg p-8 glass-card border-white/10">
         <h1 className="font-grotesk text-2xl mb-6 text-center">Create your account</h1>
         <div className="space-y-3">
           <Input placeholder="Name" className="rounded-2xl" value={name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)} />
+          <Input placeholder="Age" type="number" className="rounded-2xl" value={age} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAge(e.target.value)} />
           <Input placeholder="Email" className="rounded-2xl" value={email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} />
           <Input placeholder="Password" type="password" className="rounded-2xl" value={password} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)} />
-          <Button variant="hero" className="w-full" onClick={handleSignup} disabled={loading || !email || !password}>
+          <Button variant="hero" className="w-full" onClick={handleSignup} disabled={loading || !email || !password || !name || !age}>
             {loading ? "Creating..." : "Sign up"}
           </Button>
           <div className="grid grid-cols-2 gap-2">

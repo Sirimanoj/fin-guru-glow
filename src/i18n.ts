@@ -26,6 +26,7 @@ const resources = {
             "income_vs_expenses": "Income vs Expenses",
             "portfolio_allocation": "Portfolio Allocation",
             "recent_transactions": "Recent Transactions",
+            "resources": "Resources",
 
             // Chat
             "ai_mentors": "AI Mentors",
@@ -37,9 +38,20 @@ const resources = {
             "dalio_intro": "Hi, I'm Ray. I view the economy and life as a machine. If we understand the principles, we can handle anything. Let's look at your situation objectively.",
 
             // Chat Responses (Mock)
-            "invest_response": "Well, the first rule is: Never lose money. The second rule is: Never forget rule number one! Look for wonderful businesses at fair prices.",
-            "crypto_response": "I'll be honest with you—I prefer assets that produce something, like a farm or a factory. Be very careful with things that don't generate value on their own.",
-            "default_response": "Price is what you pay. Value is what you get. If you're thinking long-term, you're already ahead of most people."
+            // Chat Responses (Mock - Warren)
+            "warren_invest_response": "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1. I look for simple, understandable businesses with a durable competitive advantage—a 'moat'. If you aren't willing to own a stock for 10 years, don't even think about owning it for 10 minutes.",
+            "warren_crypto_response": "I stay away from it. It doesn't produce anything. If you buy a farm, you get crops. If you buy bitcoin, you're just hoping someone else pays more for it later. That's speculation, not investment.",
+            "warren_default_response": "The stock market is a device for transferring money from the impatient to the patient. Whatever you do, focus on the long-term value, not today's price.",
+
+            // Chat Responses (Mock - Naval)
+            "naval_invest_response": "Don't just save; own equity. You will never get rich renting out your time. Look for businesses where you can apply specific knowledge, leverage, and accountability.",
+            "naval_crypto_response": "Crypto is the first real exit from the centralized financial system. It's decentralized, permissionless, and resistant to censorship. It's not just money; it's a new internet of value.",
+            "naval_default_response": "Wealth is the ability to not have to be anywhere you don't want to be. Focus on productizing yourself. What can you provide that no one else can?",
+
+            // Chat Responses (Mock - Dalio)
+            "dalio_invest_response": "It's all about diversification. You want a portfolio that can weather any season—the 'All Weather' portfolio. Don't bet everything on one outcome. Balance your risk across different asset classes.",
+            "dalio_crypto_response": "It's an alternative currency and a store of wealth, but it's volatile. I think it should be a small part of a diversified portfolio not a huge bet. We are in a changing world order, and digital assets are part of that evolution.",
+            "dalio_default_response": "Pain + Reflection = Progress. Look at the economic machine. Where are we in the debt cycle? Understand the patterns of history to predict the future."
         }
     },
     hi: {

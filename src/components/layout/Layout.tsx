@@ -1,5 +1,5 @@
-import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, Wallet, User, LogOut, Bell } from 'lucide-react';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, MessageSquare, Wallet, User, LogOut, Bell, Library } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
@@ -8,9 +8,29 @@ import { Button } from '../ui/button';
 import { toast } from 'sonner';
 import { StreakFlame } from '../gamification/StreakFlame';
 import { XPIndicator } from '../gamification/XPIndicator';
+import { useEffect } from 'react';
+import { getMyProfile } from '@/integrations/supabase/db';
 
 const Layout = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const checkProfile = async () => {
+            const profile = await getMyProfile();
+            const localCompleted = localStorage.getItem('fin_onboarding_completed') === 'true';
+
+            // If profile is loaded but missing critical survey data
+            // We verify 'monthly_salary' as a proxy for survey completion
+            // BUT we also respect the localStorage flag to prevent loops if DB write failed
+            if (profile && !profile.monthly_salary && !localCompleted) {
+                toast("Please complete your profile survey to continue.");
+                navigate('/survey');
+            }
+        };
+        checkProfile();
+    }, [navigate]);
+
     return (
         <div className="flex h-screen bg-background text-foreground overflow-hidden">
             {/* Sidebar */}
@@ -53,6 +73,17 @@ const Layout = () => {
                     >
                         <Wallet size={20} />
                         <span>{t('tools')}</span>
+                    </NavLink>
+
+                    <NavLink
+                        to="/resources"
+                        className={({ isActive }) => cn(
+                            "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
+                            isActive ? "bg-primary/20 text-primary shadow-[0_0_15px_rgba(124,58,237,0.3)]" : "hover:bg-accent hover:text-accent-foreground"
+                        )}
+                    >
+                        <Library size={20} />
+                        <span>{t('resources')}</span>
                     </NavLink>
 
                     <NavLink

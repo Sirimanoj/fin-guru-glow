@@ -1,0 +1,38 @@
+[
+    {
+        "id": "budgeting_basics",
+        "title": "Budgeting 101: The 50/30/20 Rule",
+        "section": "Budgeting",
+        "content": "A popular budgeting framework is the 50/30/20 rule. Allocate 50% of your post-tax income to Needs (rent, groceries, basic utilities), 30% to Wants (dining out, entertainment, shopping), and 20% to Savings and Debt Repayment (SIPs, emergency fund, loan EMIs). In India, where rent in metros can be high, you might adjust this to 60/20/20, but the principle remains: pay yourself (save) before you spend on luxuries."
+    },
+    {
+        "id": "emergency_fund",
+        "title": "Why You Need an Emergency Fund",
+        "section": "Emergency Fund",
+        "content": "An emergency fund is money kept aside for unforeseen expenses like job loss or medical emergencies. It should cover 3-6 months of your expenses (not income). Keep this in liquid assets like a high-yield savings account or a Liquid Mutual Fund, not in stocks or locked-in FDs, so you can access it instantly without penalty."
+    },
+    {
+        "id": "debt_payoff",
+        "title": "Debt Repayment Strategies: Snowball vs Avalanche",
+        "section": "Debt",
+        "content": "Two main strategies exist for paying off debt. 1. Debt Snowball: Pay minimums on all loans, but put extra money towards the smallest loan first. The psychological win of closing a loan motivates you. 2. Debt Avalanche: Pay off the loan with the highest interest rate first (e.g., credit card debt at 30-40%). This saves you the most money mathematically. In India, always prioritize high-interest debt like personal loans and credit cards over low-interest ones like home loans, which also offer tax benefits."
+    },
+    {
+        "id": "mutual_funds_basics",
+        "title": "Introduction to Mutual Funds and SIPs",
+        "section": "Investing",
+        "content": "A Mutual Fund pools money from many investors to invest in stocks, bonds, or other assets. For most beginners, an Index Fund (like Nifty 50) is a safe starting point. A Systematic Investment Plan (SIP) allows you to invest small amounts (e.g., ₹500) regularly. This instills discipline and helps in rupee-cost averaging, reducing the risk of market volatility over time."
+    },
+    {
+        "id": "asset_allocation",
+        "title": "Asset Allocation and Risk Profile",
+        "section": "Investing",
+        "content": "Don't put all your eggs in one basket. Asset allocation means dividing your portfolio among different asset classes: Equity (Stocks/Mutual Funds) for growth, Debt (PPF, EPF, Bonds) for stability, and Gold/Real Estate for hedging. A common rule of thumb for equity exposure is '100 minus your age'. If you are 25, you might have 75% in equity. However, this depends on your risk appetite and financial goals."
+    },
+    {
+        "id": "tax_saving_basics",
+        "title": "Tax Saving Instruments in India",
+        "section": "Taxes",
+        "content": "Under Section 80C of the Income Tax Act, you can claim deductions up to ₹1.5 Lakh. Common options include: 1. EPF (Employee Provident Fund): Debt instrument, safe, long-term. 2. PPF (Public Provident Fund): 15-year lock-in, tax-free interest. 3. ELSS (Equity Linked Savings Scheme): Mutual funds with a 3-year lock-in, good for wealth creation. 4. Life Insurance Premiums (Term Insurance is best). Choose based on your liquidity needs and risk profile."
+    }
+]

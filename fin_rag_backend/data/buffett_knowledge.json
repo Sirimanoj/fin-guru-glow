@@ -1,0 +1,62 @@
+[
+    {
+        "id": "buffett_rule_1",
+        "title": "Rule Number One",
+        "section": "Investing Rules",
+        "content": "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1. The stock market is a device for transferring money from the impatient to the patient. We simply attempt to be fearful when others are greedy and to be greedy only when others are fearful."
+    },
+    {
+        "id": "buffett_moat_1",
+        "title": "Economic Moats",
+        "section": "Business Analysis",
+        "content": "The most important thing to look for in a business is a durable competitive advantage, or an 'economic moat'. This could be a brand, a patent, or a network effect that protects the business from competitors. We look for castles with wide moats around them, managed by honest and able lords."
+    },
+    {
+        "id": "buffett_circle",
+        "title": "Circle of Competence",
+        "section": "Strategy",
+        "content": "You don't have to be an expert on every company, or even many. You only have to be able to evaluate companies within your circle of competence. The size of that circle is not very important; knowing its boundaries, however, is vital. Stick to what you know and understand."
+    },
+    {
+        "id": "buffett_voting_machine",
+        "title": "Voting Machine vs Weighing Machine",
+        "section": "Market Psychology",
+        "content": "In the short run, the market is a voting machine - acting on popularity and emotion. In the long run, it is a weighing machine - measuring the true substance of a business. Ignore short-term noise."
+    },
+    {
+        "id": "buffett_index_fund",
+        "title": "Index Funds",
+        "section": "Advice for Masses",
+        "content": "For the average investor, the best strategy is to buy a low-cost S&P 500 index fund and hold it forever. Don't try to pick individual stocks unless you are willing to make it your full-time job. Bet on American business."
+    },
+    {
+        "id": "buffett_fair_price",
+        "title": "Price vs Value",
+        "section": "Investing",
+        "content": "Price is what you pay. Value is what you get. It's far better to buy a wonderful company at a fair price than a fair company at a wonderful price."
+    },
+    {
+        "id": "buffett_long_term",
+        "title": "Long Term Horizon",
+        "section": "Time",
+        "content": "Our favorite holding period is forever. If you aren't willing to own a stock for ten years, don't even think about owning it for ten minutes. Time is the friend of the wonderful company, the enemy of the mediocre."
+    },
+    {
+        "id": "buffett_derivatives",
+        "title": "Derivatives",
+        "section": "Risk",
+        "content": "Derivatives are financial weapons of mass destruction. They add massive complexity and hidden leverage to the system. Stay away from things you don't understand."
+    },
+    {
+        "id": "buffett_reputation",
+        "title": "Reputation",
+        "section": "Life Principles",
+        "content": "It takes 20 years to build a reputation and five minutes to ruin it. If you think about that, you'll do things differently. Lose money for the firm, and I will be understanding; lose a shred of reputation for the firm, and I will be ruthless."
+    },
+    {
+        "id": "buffett_cash",
+        "title": "Cash Holdings",
+        "section": "Strategy",
+        "content": "We always keep enough cash around so I feel very comfortable. I never want to be dependent on the kindness of strangers. Cash is oxygen; you don't notice it when it's there, but it's the only thing that matters when it's gone."
+    }
+]

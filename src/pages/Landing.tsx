@@ -19,13 +19,13 @@ const Landing = () => {
 
                 <div className="flex gap-4 justify-center pt-8">
                     <Link
-                        to="/auth"
+                        to="/signup"
                         className="px-8 py-4 bg-primary text-primary-foreground rounded-full font-semibold text-lg hover:shadow-[0_0_20px_rgba(124,58,237,0.5)] transition-all flex items-center gap-2"
                     >
                         Get Started <ArrowRight size={20} />
                     </Link>
                     <Link
-                        to="/auth"
+                        to="/login"
                         className="px-8 py-4 bg-secondary text-secondary-foreground rounded-full font-semibold text-lg hover:bg-secondary/80 transition-all"
                     >
                         Log In

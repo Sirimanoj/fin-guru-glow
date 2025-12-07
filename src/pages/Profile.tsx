@@ -1,14 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Settings, Bell, Moon, Shield, LogOut, CreditCard, Award } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 import { BadgeGrid } from '../components/gamification/BadgeGrid';
 import { useGamification } from '../context/GamificationContext';
+import { getMyProfile } from '@/integrations/supabase/db';
+import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
     const { xp, level, streak } = useGamification();
     const [darkMode, setDarkMode] = useState(true);
     const [notifications, setNotifications] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [profile, setProfile] = useState<{
+        display_name?: string;
+        avatar_url?: string;
+        age?: number;
+        monthly_salary?: number;
+        assets?: string[];
+        financial_goals?: string;
+    } | null>(null);
+    const [email, setEmail] = useState<string>("");
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    setEmail(user.email || "");
+                    const p = await getMyProfile();
+                    setProfile(p);
+                }
+            } catch (error) {
+                console.error("Error loading profile:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadData();
+    }, []);
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -24,8 +54,10 @@ const Profile = () => {
                     </div>
 
                     <div className="text-center md:text-left flex-1">
-                        <h1 className="text-3xl font-bold">Alex Johnson</h1>
-                        <p className="text-muted-foreground">@alex_finance_guru</p>
+                        <h1 className="text-3xl font-bold">
+                            {loading ? "Loading..." : (profile?.display_name || "User")}
+                        </h1>
+                        <p className="text-muted-foreground">{email}</p>
                         <div className="flex items-center justify-center md:justify-start gap-4 mt-3">
                             <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium border border-primary/20">
                                 Pro Member
@@ -65,6 +97,55 @@ const Profile = () => {
                     <h2 className="text-xl font-semibold">Achievements</h2>
                 </div>
                 <BadgeGrid />
+            </div>
+
+            {/* Financial Profile Section */}
+            <div className="glass-card p-6 rounded-2xl space-y-6">
+                <div className="flex items-center gap-3 mb-2">
+                    <CreditCard className="text-primary" size={24} />
+                    <h2 className="text-xl font-semibold">Financial Profile</h2>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                        <div className="p-4 rounded-xl bg-secondary/30 border border-white/5">
+                            <p className="text-sm text-muted-foreground mb-1">Monthly Salary</p>
+                            <p className="text-xl font-bold">
+                                {profile?.monthly_salary ? `₹${profile.monthly_salary.toLocaleString()}` : "Not set"}
+                            </p>
+                        </div>
+                        <div className="p-4 rounded-xl bg-secondary/30 border border-white/5">
+                            <p className="text-sm text-muted-foreground mb-1">Age</p>
+                            <p className="text-xl font-bold">
+                                {profile?.age || "Not set"}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="p-4 rounded-xl bg-secondary/30 border border-white/5 h-full">
+                            <p className="text-sm text-muted-foreground mb-2">Assets</p>
+                            <div className="flex flex-wrap gap-2">
+                                {profile?.assets && Array.isArray(profile.assets) && profile.assets.length > 0 ? (
+                                    profile.assets.map((asset: string) => (
+                                        <span key={asset} className="px-2 py-1 rounded-md bg-primary/20 text-primary text-xs font-medium">
+                                            {asset}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-muted-foreground text-sm">No assets listed</span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-secondary/30 border border-white/5">
+                    <p className="text-sm text-muted-foreground mb-1">Financial Goals</p>
+                    <p className="text-base">
+                        {profile?.financial_goals || "No goals set yet."}
+                    </p>
+                </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">

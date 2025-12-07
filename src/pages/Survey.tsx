@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Check, Target, TrendingUp, BookOpen, Shield, Brain, Sparkles } from 'lucide-react';
-
-// Assuming we have a supabase client context or hook, but for now using mock/local state or direct supabase call if needed.
-// Importing types might be needed if we were strict, but for this UI prototype we'll keep it self-contained or import relevant parts.
+import { ArrowRight, Check, Target, TrendingUp, BookOpen, Shield, Brain, Sparkles, IndianRupee } from 'lucide-react';
+import { updateProfile } from '@/integrations/supabase/db';
+import { toast } from 'sonner';
 
 const Survey = () => {
     const navigate = useNavigate();
@@ -12,10 +11,13 @@ const Survey = () => {
     const [formData, setFormData] = useState({
         financialGoal: '',
         knowledgeLevel: '',
-        preferredPersona: ''
+        preferredPersona: '',
+        monthlySalary: '',
+        assets: [] as string[],
+        savingsGoals: ''
     });
 
-    const totalSteps = 4; // Intro, Goal, Knowledge, Persona
+    const totalSteps = 6; // Intro, Goal, Details (Salary/Assets), Savings Goals, Knowledge, Persona
 
     const handleNext = () => {
         if (step < totalSteps) {
@@ -25,10 +27,17 @@ const Survey = () => {
         }
     };
 
-    const handleOptionSelect = (key: string, value: string) => {
+    const handleOptionSelect = (key: string, value: any) => {
         setFormData(prev => ({ ...prev, [key]: value }));
-        // Auto advance after selection for smoother UX, except maybe for specific steps if we want confirmation
-        setTimeout(() => handleNext(), 300);
+    };
+
+    const toggleAsset = (asset: string) => {
+        setFormData(prev => {
+            const assets = prev.assets.includes(asset)
+                ? prev.assets.filter(a => a !== asset)
+                : [...prev.assets, asset];
+            return { ...prev, assets };
+        });
     };
 
     const handleSubmit = async () => {
@@ -41,14 +50,26 @@ const Survey = () => {
         else if (formData.financialGoal === 'save') segment = 'Saver';
         else if (formData.financialGoal === 'learn') segment = 'Learner';
 
-        // TODO: Save to Supabase (simulating delay)
-        setTimeout(() => {
+        try {
+            await updateProfile({
+                monthly_salary: parseFloat(formData.monthlySalary) || 0,
+                assets: formData.assets,
+                financial_goals: formData.savingsGoals,
+                // store other data if needed or just use for segmentation logic
+            });
+
             // Mock saving to local storage or state management
             localStorage.setItem('fin_user_segment', segment);
             localStorage.setItem('fin_preferred_persona', formData.preferredPersona);
             localStorage.setItem('fin_onboarding_completed', 'true');
             navigate('/dashboard');
-        }, 1000);
+        } catch (error) {
+            console.error("Error saving survey:", error);
+            toast.error("Profile update failed, but taking you to dashboard...");
+            // Fallback navigation
+            localStorage.setItem('fin_onboarding_completed', 'true');
+            navigate('/dashboard');
+        }
     };
 
     return (
@@ -134,12 +155,93 @@ const Survey = () => {
                                     </button>
                                 ))}
                             </div>
+                            <button
+                                onClick={handleNext}
+                                disabled={!formData.financialGoal}
+                                className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold mt-4 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Continue
+                            </button>
                         </motion.div>
                     )}
 
                     {step === 3 && (
                         <motion.div
                             key="step3"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                        >
+                            <h2 className="text-3xl font-bold text-center mb-8">Financial Profile</h2>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Monthly Salary</label>
+                                    <div className="relative">
+                                        <IndianRupee className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
+                                        <input
+                                            type="number"
+                                            value={formData.monthlySalary}
+                                            onChange={(e) => handleOptionSelect('monthlySalary', e.target.value)}
+                                            className="w-full p-3 pl-10 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                                            placeholder="e.g. 5000"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium mb-3">Assets You Own</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {['Real Estate/Land', 'Gold/Jewelry', 'Stocks/Bonds', 'Crypto', 'Vehicle', 'Cash Savings'].map(asset => (
+                                            <button
+                                                key={asset}
+                                                onClick={() => toggleAsset(asset)}
+                                                className={`p-3 rounded-xl border text-sm font-medium transition-all ${formData.assets.includes(asset)
+                                                    ? 'bg-primary/10 border-primary text-primary'
+                                                    : 'bg-card border-border hover:border-primary/50'
+                                                    }`}
+                                            >
+                                                {asset}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onClick={handleNext} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold mt-4 hover:opacity-90">
+                                Continue
+                            </button>
+                        </motion.div>
+                    )}
+
+                    {step === 4 && (
+                        <motion.div
+                            key="step4"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                        >
+                            <h2 className="text-3xl font-bold text-center mb-8">Your Savings Goals</h2>
+                            <p className="text-center text-muted-foreground mb-4">What specific things are you saving for?</p>
+
+                            <textarea
+                                value={formData.savingsGoals}
+                                onChange={(e) => handleOptionSelect('savingsGoals', e.target.value)}
+                                className="w-full h-32 p-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
+                                placeholder="e.g. Buying a house in 5 years, Vacation to Japan, Emergency fund..."
+                            />
+
+                            <button onClick={handleNext} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold mt-4 hover:opacity-90">
+                                Continue
+                            </button>
+                        </motion.div>
+                    )}
+
+                    {step === 5 && (
+                        <motion.div
+                            key="step5"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
@@ -169,12 +271,19 @@ const Survey = () => {
                                     </button>
                                 ))}
                             </div>
+                            <button
+                                onClick={handleNext}
+                                disabled={!formData.knowledgeLevel}
+                                className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold mt-4 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Continue
+                            </button>
                         </motion.div>
                     )}
 
-                    {step === 4 && (
+                    {step === 6 && (
                         <motion.div
-                            key="step4"
+                            key="step6"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
@@ -209,6 +318,12 @@ const Survey = () => {
                                     </button>
                                 ))}
                             </div>
+                            <button
+                                onClick={handleSubmit}
+                                className="w-full mt-4 px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold text-lg hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                            >
+                                Complete Setup <ArrowRight className="w-5 h-5" />
+                            </button>
                         </motion.div>
                     )}
                 </AnimatePresence>

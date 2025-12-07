@@ -71,6 +71,9 @@ export const Navbar = () => {
             <NavLink to="/tools" className={linkCls} end>
               {t('tools')}
             </NavLink>
+            <NavLink to="/resources" className={linkCls} end>
+              {t('resources')}
+            </NavLink>
             <NavLink to="/profile" className={linkCls} end>
               {t('profile')}
             </NavLink>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Advisor RAG</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --chat-bg: #1e293b;
+            --user-msg: #3b82f6;
+            --bot-msg: #334155;
+            --text-color: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--chat-bg);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            padding: 20px;
+            border-bottom: 1px solid #475569;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .user {
+            align-self: flex-end;
+            background-color: var(--user-msg);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .bot {
+            align-self: flex-start;
+            background-color: var(--bot-msg);
+            color: #bdc3c7;
+            border-bottom-left-radius: 2px;
+        }
+
+        .bot strong {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .bot h3 {
+            margin: 10px 0 5px 0;
+            font-size: 1.1em;
+            color: #60a5fa;
+        }
+
+        .sources {
+            font-size: 0.75rem;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #475569;
+            display: flex;
+            gap: 10px;
+        }
+
+        input,
+        select,
+        button {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background-color: #0f172a;
+            color: white;
+            outline: none;
+        }
+
+        input {
+            flex-grow: 1;
+        }
+
+        button {
+            background-color: var(--user-msg);
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .loading {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            align-self: center;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h3>FinRAG India</h3>
+            <select id="persona">
+                <option value="default">Default Persona</option>
+                <option value="naval">Naval Ravikant</option>
+                <option value="ray">Ray Dalio</option>
+                <option value="buffett">Warren Buffett</option>
+            </select>
+        </div>
+        <div class="chat-area" id="chat">
+            <div class="message bot">
+                Hello! I am your AI financial assistant. I can help with Indian financial instruments like SIPs, PPF,
+                and Mutual Funds. How can I help you today?
+            </div>
+        </div>
+        <div class="loading" id="loading">Thinking...</div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Ask about SIP, Tax, Stocks..."
+                onkeypress="handleEnter(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const userId = "web_user_" + Math.random().toString(36).substr(2, 9);
+        const chatDiv = document.getElementById('chat');
+        const loader = document.getElementById('loading');
+
+        let history = [];
+
+        const personaSelect = document.getElementById('persona');
+
+        // Clear chat when persona changes
+        personaSelect.addEventListener('change', () => {
+            chatDiv.innerHTML = '<div class="message bot">Persona changed to ' + personaSelect.options[personaSelect.selectedIndex].text + '. How can I help you today?</div>';
+            history = []; // Reset history for new persona context
+        });
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            const persona = personaSelect.value;
+
+            if (!message) return;
+
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+            loader.style.display = 'block';
+
+            try {
+                const payload = {
+                    user_id: userId,
+                    message: message,
+                    persona: persona,
+                    history: history
+                };
+
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                // Add Bot Message
+                let sourceHtml = '';
+                if (data.sources && data.sources.length > 0) {
+                    sourceHtml = '<div class="sources"><strong>Sources:</strong><br>' +
+                        data.sources.map(s => `- ${s.title} (${s.section})`).join('<br>') +
+                        '</div>';
+                }
+
+                // Format markdown
+                const formattedAnswer = simpleMarkdown(data.answer);
+                addMessage(formattedAnswer + sourceHtml, 'bot', true);
+
+                // Update History
+                history.push({ role: "user", content: message });
+                history.push({ role: "model", content: data.answer });
+
+            } catch (e) {
+                addMessage("Error: Could not connect to backend.", 'bot');
+                console.error(e);
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function simpleMarkdown(text) {
+            if (!text) return "";
+            // Headers (### Header) -> <h3>Header</h3>
+            text = text.replace(/### (.*)/g, '<h3>$1</h3>');
+            // Bold (**text**) -> <strong>text</strong>
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // List items (1. Item) -> <br>• Item (Simplistic reflow)
+            // text = text.replace(/^\d+\. (.*)/gm, '<br>• $1'); 
+            // Better list handling:
+            text = text.replace(/\n\d+\. /g, '<br>&nbsp;&nbsp;• ');
+            // Newlines to break
+            text = text.replace(/\n/g, '<br>');
+            return text;
+        }
+
+        function addMessage(text, sender, isHtml = false) {
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            if (isHtml) div.innerHTML = text;
+            else div.innerText = text;
+            chatDiv.appendChild(div);
+            // Auto scroll
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>

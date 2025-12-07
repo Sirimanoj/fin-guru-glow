@@ -37,8 +37,8 @@ const Login = () => {
   };
 
   return (
-    <main className="container py-16 max-w-lg">
-      <Card className="card-neo p-8">
+    <main className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-lg p-8 glass-card border-white/10">
         <h1 className="font-grotesk text-2xl mb-6 text-center">Welcome back</h1>
         <div className="space-y-3">
           <Input placeholder="Email" className="rounded-2xl" value={email} onChange={(e) => setEmail(e.target.value)} />
