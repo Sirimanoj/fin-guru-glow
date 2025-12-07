@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional
 # Force reload for new data
@@ -8,6 +9,15 @@ import os
 from rag_engine import RAGEngine
 
 app = FastAPI(title="Financial Advisor RAG API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Allow all origins for dev
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 rag = RAGEngine()
 
 # Serve the HTML frontend

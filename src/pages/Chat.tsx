@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Send, Mic, Sparkles } from 'lucide-react';
+import { Send, Mic, Sparkles, BookOpen, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { getMyProfile } from '@/integrations/supabase/db';
+import { useToast } from '../components/ui/use-toast';
 
 type Persona = 'warren' | 'naval' | 'dalio';
 
@@ -11,6 +13,7 @@ interface Message {
     role: 'user' | 'assistant';
     content: string;
     persona?: Persona;
+    sources?: { title: string; section: string }[];
 }
 
 const PERSONAS = {
@@ -44,6 +47,7 @@ const Chat = () => {
     const { t } = useTranslation();
     const { personaId } = useParams<{ personaId: string }>();
     const navigate = useNavigate();
+    const { toast } = useToast();
 
     // Get preferred persona from storage or default to warren
     const preferredPersona = (localStorage.getItem('fin_preferred_persona') as Persona) || 'warren';
@@ -60,6 +64,20 @@ const Chat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [userProfile, setUserProfile] = useState<any>(null);
+
+    // Load user profile
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                const profile = await getMyProfile();
+                if (profile) setUserProfile(profile);
+            } catch (error) {
+                console.error("Failed to load profile for chat context", error);
+            }
+        };
+        loadProfile();
+    }, []);
 
     // Load messages from localStorage when persona changes
     useEffect(() => {
@@ -101,29 +119,93 @@ const Chat = () => {
         setInput('');
         setIsTyping(true);
 
-        // Enhanced Mock Response Logic
-        setTimeout(() => {
-            const lowerInput = input.toLowerCase();
-            let topic = 'default';
+        // Call RAG Backend
+        const callRagBackend = async () => {
+            try {
+                // Construct user context from profile
+                let contextMessage = "User Context: ";
+                if (userProfile) {
+                    contextMessage += `Monthly Salary: ₹${userProfile.monthly_salary}, `;
+                    contextMessage += `Expenses: ₹${userProfile.monthly_expenses}, `;
+                    contextMessage += `Savings: ₹${userProfile.current_savings}, `;
+                    contextMessage += `Goal: ₹${userProfile.savings_goal_target}, `;
+                    contextMessage += `Portfolio: ₹${userProfile.investment_portfolio_value}. `;
+                } else {
+                    contextMessage += "No specific financial data available. ";
+                }
+                contextMessage += "Please keep this context in mind when answering, but do not explicitly mention the numbers unless relevant.";
 
-            if (lowerInput.includes('invest') || lowerInput.includes('stock') || lowerInput.includes('buy')) {
-                topic = 'invest';
-            } else if (lowerInput.includes('crypto') || lowerInput.includes('bitcoin')) {
-                topic = 'crypto';
+                // Prepare history (convert to backend format)
+                const history = newMessages.map(m => ({
+                    role: m.role,
+                    content: m.content
+                }));
+
+                // Inject context as the first history item
+                history.unshift({ role: "user", content: contextMessage });
+
+                const response = await fetch('http://localhost:8000/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: "current_user",
+                        message: userMsg.content, // Use the message content we just added
+                        locale: "en-IN",
+                        persona: activePersona,
+                        history: history
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch from RAG backend');
+                }
+
+                const data = await response.json();
+
+                const aiMsg: Message = {
+                    id: (Date.now() + 1).toString(),
+                    role: 'assistant',
+                    content: data.answer,
+                    persona: activePersona,
+                    sources: data.sources
+                };
+                setMessages(prev => [...prev, aiMsg]);
+
+            } catch (error) {
+                console.error("RAG Error:", error);
+                toast({
+                    title: "AI Service Unavailable",
+                    description: "Falling back to offline mode. Please ensure the backend server is running on port 8000.",
+                    variant: "destructive"
+                });
+
+                // Fallback to mock logic
+                setTimeout(() => {
+                    const lowerInput = userMsg.content.toLowerCase();
+                    let topic = 'default';
+
+                    if (lowerInput.includes('invest') || lowerInput.includes('stock') || lowerInput.includes('buy')) {
+                        topic = 'invest';
+                    } else if (lowerInput.includes('crypto') || lowerInput.includes('bitcoin')) {
+                        topic = 'crypto';
+                    }
+
+                    const response = t(`${activePersona}_${topic}_response`);
+
+                    const aiMsg: Message = {
+                        id: (Date.now() + 1).toString(),
+                        role: 'assistant',
+                        content: response + "\n\n(Offline Mode - could not connect to RAG backend)",
+                        persona: activePersona
+                    };
+                    setMessages(prev => [...prev, aiMsg]);
+                }, 1000);
+            } finally {
+                setIsTyping(false);
             }
+        };
 
-            // Construct the key dynamically: e.g., 'warren_invest_response'
-            const response = t(`${activePersona}_${topic}_response`);
-
-            const aiMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'assistant',
-                content: response,
-                persona: activePersona
-            };
-            setMessages(prev => [...prev, aiMsg]);
-            setIsTyping(false);
-        }, 1500);
+        callRagBackend();
     };
 
     if (!PERSONAS[activePersona]) return null;
@@ -189,20 +271,66 @@ const Chat = () => {
                     {messages.map((msg) => (
                         <div key={msg.id} className={cn("flex w-full animate-in slide-in-from-bottom-2 duration-300", msg.role === 'user' ? "justify-end" : "justify-start")}>
                             <div className={cn(
-                                "max-w-[80%] p-5 rounded-2xl shadow-sm relative group transition-all",
+                                "max-w-[85%] lg:max-w-[75%] p-5 rounded-3xl shadow-lg relative group transition-all",
                                 msg.role === 'user'
-                                    ? "bg-primary text-primary-foreground rounded-tr-sm"
-                                    : "bg-secondary/80 backdrop-blur-sm text-secondary-foreground rounded-tl-sm border border-white/5"
+                                    ? "bg-primary text-primary-foreground rounded-tr-md"
+                                    : "bg-secondary/40 backdrop-blur-md border border-white/10 text-secondary-foreground rounded-tl-md"
                             )}>
                                 {msg.role === 'assistant' && (
-                                    <div className="absolute -left-12 top-0">
-                                        <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-[10px] text-white font-bold bg-gradient-to-br shadow-sm", PERSONAS[msg.persona || activePersona].color)}>
+                                    <div className="absolute -left-10 lg:-left-12 top-0">
+                                        <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-[10px] text-white font-bold bg-gradient-to-br shadow-lg ring-2 ring-background", PERSONAS[msg.persona || activePersona].color)}>
                                             {PERSONAS[msg.persona || activePersona].avatar}
                                         </div>
                                     </div>
                                 )}
-                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                                <span className="text-[10px] opacity-50 mt-2 block text-right">
+
+                                {/* Content with basic markdown rendering */}
+                                <div className="space-y-2 text-sm leading-relaxed">
+                                    {msg.content.split('\n').map((line, i) => {
+                                        // Simple bold parsing
+                                        const parts = line.split(/(\*\*.*?\*\*)/g);
+                                        return (
+                                            <p key={i} className="min-h-[1rem]">
+                                                {parts.map((part, j) => {
+                                                    if (part.startsWith('**') && part.endsWith('**')) {
+                                                        return <strong key={j} className="text-primary-foreground/90 font-bold">{part.slice(2, -2)}</strong>;
+                                                    }
+                                                    if (part.startsWith('###')) {
+                                                        return <span key={j} className="block text-lg font-bold mt-2 mb-1 text-purple-300">{part.replace(/^###\s*/, '')}</span>
+                                                    }
+                                                    if (part.startsWith('- ')) {
+                                                        return <span key={j} className="block pl-4 border-l-2 border-white/10 my-1">{part}</span>
+                                                    }
+                                                    return part;
+                                                })}
+                                            </p>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Sources Section */}
+                                {msg.sources && msg.sources.length > 0 && (
+                                    <div className="mt-4 pt-3 border-t border-white/10">
+                                        <details className="group">
+                                            <summary className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer hover:text-primary transition-colors select-none">
+                                                <BookOpen size={12} />
+                                                <span>{msg.sources.length} Sources Cited</span>
+                                                <ChevronDown size={12} className="group-open:rotate-180 transition-transform" />
+                                            </summary>
+                                            <div className="mt-2 space-y-1 pl-5">
+                                                {msg.sources.map((source, idx) => (
+                                                    <div key={idx} className="text-[10px] text-muted-foreground/80 flex items-center gap-1.5">
+                                                        <span className="w-1 h-1 rounded-full bg-primary/50" />
+                                                        <span className="font-medium text-purple-200">{source.title}</span>
+                                                        <span className="opacity-50">({source.section})</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </details>
+                                    </div>
+                                )}
+
+                                <span className="text-[10px] opacity-40 mt-2 block text-right font-mono">
                                     {new Date(parseInt(msg.id) || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                             </div>
